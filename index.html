@@ -1451,7 +1451,10 @@
     <!-- JOB FIT EVALUATOR -->
     <div class="reveal" style="display: flex; flex-direction: column; gap: 1.5rem;">
       <div>
-        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--teal); margin-bottom: 0.6rem;">Fit Evaluator</div>
+        <div style="display:flex; align-items:center; gap:1rem;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--teal);">Fit Evaluator</div>
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 0.6rem; color: var(--rule); letter-spacing:0.1em;" title="Evaluations run in last 7 days"><span id="counter-fit">0</span> runs / 7d</div>
+      </div>
         <div style="font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700; color: var(--white); margin-bottom: 0.8rem;">Paste a Job Description</div>
         <div style="font-size: 0.88rem; color: #a8bcce; line-height: 1.7;">Receive an honest fit assessment — advantages, gaps, and a score out of 10. Built on the same evaluation framework used to assess every opportunity in this search.</div>
       </div>
@@ -1464,7 +1467,10 @@
     <!-- Q&A ASSISTANT -->
     <div class="reveal" style="display: flex; flex-direction: column; gap: 1.5rem;">
       <div>
-        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--teal); margin-bottom: 0.6rem;">Ask Alexander</div>
+        <div style="display:flex; align-items:center; gap:1rem;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--teal);">Ask Alexander</div>
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 0.6rem; color: var(--rule); letter-spacing:0.1em;" title="Questions asked in last 7 days"><span id="counter-qa">0</span> questions / 7d</div>
+      </div>
         <div style="font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700; color: var(--white); margin-bottom: 0.8rem;">Questions in Plain English</div>
         <div style="font-size: 0.88rem; color: #a8bcce; line-height: 1.7;">Ask anything about Alexander's background, working style, availability, or approach. Direct answers — no spin.</div>
       </div>
@@ -1535,7 +1541,7 @@ async function evaluateFit() {
     "EVALUATION FRAMEWORK:\n" + buildFrameworkText() + "\n\n" +
     "JOB DESCRIPTION SUBMITTED:\n" + jd + "\n\n" +
     "Respond directly to the recruiter or employer. Structure your response as:\n" +
-    "FIT SCORE: [X/10]\n\n" +
+    "FIT SCORE: [X.X/10] — scored on a scale of 0.0 to 10.0\n\n" +
     "WHY ALEXANDER IS STRONG FOR THIS ROLE:\n[Specific advantages with concrete metrics]\n\n" +
     "HONEST GAPS:\n[Genuine shortcomings - do not omit these]\n\n" +
     "VERDICT:\n[1-2 direct sentences on whether Alexander warrants serious consideration]\n\n" +
@@ -1555,6 +1561,7 @@ async function evaluateFit() {
     var text = data.content.map(function(i) { return i.text || ""; }).join("\n");
     resultEl.textContent = text;
     resultEl.style.display = "block";
+    incrementCounter("fit");
   } catch (err) {
     resultEl.textContent = "Evaluation unavailable at this time. Please contact Alexander directly at alex.logan@gmail.com";
     resultEl.style.display = "block";
@@ -1599,6 +1606,7 @@ async function askQuestion() {
     var data = await response.json();
     var answer = data.content.map(function(i) { return i.text || ""; }).join("\n");
     qaHistory.push({ role: "assistant", content: answer });
+    incrementCounter("qa");
     var aiBubble = document.createElement("div");
     aiBubble.style.cssText = "background:var(--fog);border-left:2px solid var(--teal);padding:0.6rem 0.9rem;font-size:0.83rem;color:#b4c4d6;max-width:92%;line-height:1.6;";
     aiBubble.textContent = answer;
@@ -1622,7 +1630,49 @@ document.addEventListener("DOMContentLoaded", function() {
       if (e.key === "Enter") askQuestion();
     });
   }
+  loadCounters();
 });
+
+async function incrementCounter(type) {
+  try {
+    var now = Date.now();
+    var key = "counter:" + type;
+    var existing = null;
+    try { existing = await window.storage.get(key, true); } catch(e) {}
+    var events = existing ? JSON.parse(existing.value) : [];
+    events.push(now);
+    // Keep only last 30 days of events
+    var cutoff = now - 30 * 24 * 60 * 60 * 1000;
+    events = events.filter(function(t) { return t > cutoff; });
+    await window.storage.set(key, JSON.stringify(events), true);
+    updateCounterDisplay(type, events);
+  } catch(e) {}
+}
+
+async function loadCounters() {
+  try {
+    var types = ["fit", "qa"];
+    for (var i = 0; i < types.length; i++) {
+      var type = types[i];
+      var key = "counter:" + type;
+      try {
+        var existing = await window.storage.get(key, true);
+        if (existing) {
+          var events = JSON.parse(existing.value);
+          updateCounterDisplay(type, events);
+        }
+      } catch(e) {}
+    }
+  } catch(e) {}
+}
+
+function updateCounterDisplay(type, events) {
+  var now = Date.now();
+  var cutoff7 = now - 7 * 24 * 60 * 60 * 1000;
+  var count7 = events.filter(function(t) { return t > cutoff7; }).length;
+  var el = document.getElementById("counter-" + type);
+  if (el) el.textContent = count7;
+}
 </script>
 
 <!-- CONTACT -->
