@@ -923,6 +923,7 @@
     <li><a href="#governance">Governance</a></li>
     <li><a href="#thought-leadership">Writing</a></li>
     <li><a href="#credentials">Credentials</a></li>
+    <li><a href="#tools">Evaluation Tools</a></li>
     <li><a href="https://github.com/alexanderlogan" target="_blank">GitHub</a></li>
     <li><a href="#contact">Contact</a></li>
   </ul>
@@ -1436,6 +1437,288 @@
 
   </div>
 </section>
+
+<!-- EVALUATION TOOLS -->
+<section id="tools" style="background: var(--ink-2); padding: 7rem 4rem;">
+  <div class="section-header reveal">
+    <span class="section-num">06</span>
+    <h2 class="section-title">Evaluation Tools</h2>
+    <div class="section-rule"></div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: start;">
+
+    <!-- JOB FIT EVALUATOR -->
+    <div class="reveal" style="display: flex; flex-direction: column; gap: 1.5rem;">
+      <div>
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--teal); margin-bottom: 0.6rem;">Fit Evaluator</div>
+        <div style="font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700; color: var(--white); margin-bottom: 0.8rem;">Paste a Job Description</div>
+        <div style="font-size: 0.88rem; color: #a8bcce; line-height: 1.7;">Receive an honest fit assessment — advantages, gaps, and a score out of 10. Built on the same evaluation framework used to assess every opportunity in this search.</div>
+      </div>
+      <textarea id="jd-input" placeholder="Paste job description here..." style="width: 100%; height: 180px; background: var(--fog); border: 1px solid var(--rule); color: #b4c4d6; font-family: 'IBM Plex Sans', sans-serif; font-size: 0.85rem; padding: 1rem; resize: vertical; outline: none; line-height: 1.6;"></textarea>
+      <button onclick="evaluateFit()" style="font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink); background: var(--teal); border: none; padding: 0.9rem 2rem; cursor: pointer; align-self: flex-start; transition: background 0.2s;">Evaluate Fit →</button>
+      <div id="fit-result" style="display:none; background: var(--fog); border-left: 3px solid var(--teal); padding: 1.4rem; font-size: 0.88rem; color: #b4c4d6; line-height: 1.8; white-space: pre-wrap;"></div>
+      <div id="fit-loading" style="display:none; font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem; color: var(--teal); letter-spacing: 0.15em;">ANALYZING FIT...</div>
+    </div>
+
+    <!-- Q&A ASSISTANT -->
+    <div class="reveal" style="display: flex; flex-direction: column; gap: 1.5rem;">
+      <div>
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--teal); margin-bottom: 0.6rem;">Ask Alexander</div>
+        <div style="font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700; color: var(--white); margin-bottom: 0.8rem;">Questions in Plain English</div>
+        <div style="font-size: 0.88rem; color: #a8bcce; line-height: 1.7;">Ask anything about Alexander's background, working style, availability, or approach. Direct answers — no spin.</div>
+      </div>
+      <div id="chat-history" style="min-height: 100px; max-height: 280px; overflow-y: auto; background: var(--fog); border: 1px solid var(--rule); padding: 1rem; display: flex; flex-direction: column; gap: 0.8rem;"></div>
+      <div style="display: flex; gap: 0.8rem;">
+        <input id="qa-input" type="text" placeholder="e.g. Has Alexander worked in fintech?" style="flex: 1; background: var(--fog); border: 1px solid var(--rule); color: #b4c4d6; font-family: 'IBM Plex Sans', sans-serif; font-size: 0.85rem; padding: 0.8rem 1rem; outline: none;" onkeydown="if(event.key==='Enter') askQuestion()" />
+        <button onclick="askQuestion()" style="font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--ink); background: var(--teal); border: none; padding: 0.8rem 1.2rem; cursor: pointer; white-space: nowrap; transition: background 0.2s;">Ask →</button>
+      </div>
+      <div id="qa-loading" style="display:none; font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem; color: var(--teal); letter-spacing: 0.15em;">THINKING...</div>
+    </div>
+
+  </div>
+</section>
+
+<script>
+const ALEXANDER_PROFILE = `
+ALEXANDER LOGAN — AI PRODUCT EXECUTIVE
+Boston, MA USA | alex.logan@gmail.com | 617-202-8349
+Portfolio: https://alexanderlogan.github.io | LinkedIn: linkedin.com/in/alogan | GitHub: github.com/alexanderlogan
+
+POSITIONING
+Alexander builds corporate knowledge systems that compound user intelligence — GraphRAG, agentic AI, and governed LLM orchestration designed so every interaction makes the organisation demonstrably smarter.
+
+CAREER SUMMARY
+15 years of AI product executive leadership. $100M+ in documented business impact. 4 continents. Industries: Financial Services, Energy, Consulting, Global Retail.
+
+KEY ACHIEVEMENTS (verified, select those most relevant to the role being evaluated)
+1. Architected enterprise GenAI infrastructure with GraphRAG, semantic search, and metadata governance supporting $800M custody operations, accelerating client onboarding by 30%.
+2. Implemented AI-powered predictive observability platform preventing $15M+ annual losses across digital banking infrastructure serving 14M users, improving availability by 18% and reducing incidents by 40%.
+3. Built global data platform with graph database infrastructure processing 5M+ IoT devices, achieving 230% throughput gains and sub-minute latency for GraphRAG and context-aware analytics.
+4. Scaled distributed engineering teams across 8 countries, increasing delivery velocity by 90% and reducing time-to-market by 40% through DevOps automation, SRE practices, and matrix stakeholder alignment.
+5. Established enterprise AI governance and MLOps frameworks with metadata management across financial platforms, enabling production ML deployment while maintaining regulatory compliance.
+6. Directed digital transformation portfolio managing €16M budget across 3-country operations, accelerating release velocity by 60% through PMO establishment, KPI and governance standardization.
+7. Launched commercial banking digital asset custody platform supporting $600M cross-border settlement, architecting blockchain infrastructure with institutional-grade security.
+8. Pioneered semantic search and metadata systems for enterprise knowledge discovery, implementing content syndication architecture reducing manual analysis overhead through AI-driven distribution.
+9. Led enterprise transformation for an international retailer, recruited by ownership to co-author corporate strategy and operationalize change across three countries and four business lines.
+10. Advising fintech start-up on AI strategy and institutional partnerships, contributing to platform supporting $800M+ in digital asset activity.
+
+CURRENT ROLE
+Chief AI Officer (Fractional) | CloudTech Group — Blockchain-Enabled Financial Infrastructure | Jan 2025–Present | Remote (Melbourne, AUS)
+- Architected enterprise GenAI infrastructure with GraphRAG, semantic search, and metadata governance supporting $800M+ custody operations
+- Compressed enterprise onboarding from 10 weeks to 4 weeks (30% improvement)
+- Launched digital asset custody platform supporting $600M+ cross-border settlement
+- Reduced inference cost per workflow by 38%, increased gross margin by 9 points
+- $3.8M new annualized revenue via XDC Network partnership and 4 academic AI research collaborations
+- 99.95% AI service availability, zero material policy breaches over 12-month production window
+
+PRIOR ROLES
+Staff Product Manager, AI & Platform Observability | PNC Financial Services — Fifth Largest U.S. Bank | Oct 2022–Dec 2024 | Pittsburgh, PA
+- Built predictive observability stack using Neo4j knowledge graphs, ChromaDB vector retrieval, and LLM orchestration
+- Improved incident recommendation precision from 73% to 89%, reduced false positives by 33%
+- Prevented $15M in annualized operational losses across 300+ critical services serving 14M digital users
+- Reduced MTTR by 40%, Sev-1 incidents by 26%, improved availability from 99.89% to 99.95%
+- Shortened release cycles from 8 weeks to 4 weeks, increased deployment frequency by 2.4x
+- Scaled governed AI operations across 40+ engineering and SRE teams
+
+Senior Technical Product Manager | ENEL — World's Largest Energy Company | Sep 2019–Sep 2022 | Boston, MA
+- Redesigned AWS Firehose pipeline using Kinesis, Lambda, Redis Graph — 230% throughput improvement
+- Deployed observability using Splunk and AWS X-Ray across 40+ engineers in US, Italy, Poland, Ireland
+- Secured HQ funding to expand from US-only to 20+ markets across Europe, LATAM, APAC
+- Established engineering centers across 4 countries
+
+Manager of Product & Platform Services | Accenture — Leading Global Consulting Firm | Apr 2015–Jul 2019 | Boston, MA
+- Delivered Salesforce Financial Cloud for PNC Bank 3 months ahead of schedule
+- Designed HIPAA-aligned BI platform for BCBS NC — improved decision-making by 40%
+- Reengineered disaster-recovery program for BNY Mellon ($7T custodial bank)
+- Led platform architecture for Massachusetts Department of Revenue cloud migration
+
+Director of Enterprise Transformation & Strategy | REWE Group / MARTA Holding — €60B European Retailer | May 2006–Dec 2014 | Moscow & Vienna
+- Co-authored enterprise-wide digital transformation strategy with PwC and C-level stakeholders
+- Managed €80M online electronics division P&L
+- Founded and led PMO with €16M annual budget authority, 6 product managers, 3 countries
+- Recruited directly by ownership to align Russian business units with Western partners
+
+EDUCATION
+BSBA, Finance — Boston University, Questrom School of Business
+MBA, International Business — Nyenrode Business Universiteit, Netherlands
+Executive Program — MIT: Applied Agentic AI for Organizational Transformation (current); Machine Learning, Modeling & Simulation
+Executive Program — University of Oxford: AI for Product and Service Development
+Executive Program — INSEAD: Artificial Intelligence and Blockchain
+Certifications — IBM: Generative AI and LLM Architecture; Python for AI Development
+
+TECHNICAL PROFICIENCIES
+Gen AI, Agentic AI, GraphRAG, Knowledge Graphs, Vector DB, LangChain, LangGraph, PageIndex, Claude Code, Ollama, n8n, Redis Graph, Neo4j, ChromaDB, AWS, Azure, Python, MLOps, ISO 20022
+
+CORE COMPETENCIES
+AI Strategy & Architecture, Product Management, Data Platform Design, LLMOps, AI Governance & Compliance, Enterprise Transformation, Cross-Functional Leadership, Global Operations, PMO Governance, Agile SAFe, AI Ethics, Regulatory Technology (RegTech), Change Management, EU AI Act Compliance
+
+WORKING STYLE & CULTURE FIT
+- Operates at the intersection of technical depth and executive communication — equally comfortable in architecture reviews and board presentations
+- Bias toward systems thinking: every solution is designed to compound in value over time, not just solve the immediate problem
+- Thrives in complex, regulated, multi-stakeholder environments where others see ambiguity
+- Direct communicator. Prefers written precision over verbal vagueness
+- Led distributed teams across 9 countries — high cultural intelligence, low tolerance for bureaucracy that does not serve delivery
+- Prefers organisations with genuine AI ambition, not AI theatre
+- Works best when given clear outcomes and wide latitude on method
+- Strong preference for organisations that treat governance as a competitive advantage, not a compliance checkbox
+
+SALARY EXPECTATIONS & AVAILABILITY
+- Target: Director, VP Product, Chief AI Officer, or equivalent executive roles
+- Compensation: $180,000+ base salary; open to equity-weighted packages at growth-stage companies
+- Availability: Immediately available for full-time permanent roles
+- Location: Based in Boston, MA USA; open to hybrid arrangements; available for travel
+- Remote: Open to remote for the right opportunity
+- Not interested in: contract-only roles without path to permanent, roles below Director level, roles without meaningful AI scope
+`;
+
+const FIT_FRAMEWORK = `
+EVALUATION FRAMEWORK (apply honestly — score 1-10):
+
+SCORING DIMENSIONS:
+1. Role Alignment (30%): Does the JD map to Alexander's demonstrated experience?
+2. Level Match (20%): Is this Director/VP/Principal/C-suite level, not mid-level PM?
+3. Technical Fit (15%): Does the tech stack match (AI/ML, cloud, data platforms, GraphRAG, LLMOps)?
+4. Domain Relevance (15%): Financial services, energy, enterprise, consulting, global retail?
+5. Company Quality (10%): Revenue, headcount, funding, market position
+6. Compensation Signal (10%): Does comp range align with $180K+ base threshold?
+
+SCORING SCALE:
+8-10: Strong fit — highlight key advantages and any gaps
+6-7: Moderate fit — worth considering if strategic
+Below 6: Weak fit — be direct about why
+
+RED FLAGS (automatic score downgrade):
+- Contract/staff augmentation only
+- Sub-100 employee without strong funding
+- Hands-on coding as PRIMARY requirement (not incidental)
+- No AI component in role
+- Title inflation (CTO at 10-person startup without substance)
+- Posted by recruiting firm with unnamed client
+
+HONEST ASSESSMENT REQUIREMENTS:
+- Do not flatter. Be precise about genuine gaps.
+- Surface real advantages clearly and specifically.
+- If the role is a poor fit, say so directly.
+- Format: Score, then Advantages, then Gaps, then Verdict (1-2 sentences).
+`;
+
+async function evaluateFit() {
+  const jd = document.getElementById('jd-input').value.trim();
+  if (!jd) return;
+  
+  const resultEl = document.getElementById('fit-result');
+  const loadingEl = document.getElementById('fit-loading');
+  
+  resultEl.style.display = 'none';
+  loadingEl.style.display = 'block';
+
+  const prompt = `You are Alexander Logan's professional portfolio assistant. A recruiter or prospective employer has submitted a job description to assess how well Alexander fits their role. Speak directly to them — address them as the hiring party evaluating a candidate, not as an internal career advisor. Be honest, specific, and useful to someone making a hiring decision.
+
+${ALEXANDER_PROFILE}
+
+${FIT_FRAMEWORK}
+
+JOB DESCRIPTION SUBMITTED:
+${jd}
+
+Respond directly to the recruiter or employer. Structure your response as:
+
+FIT SCORE: [X/10]
+
+WHY ALEXANDER IS STRONG FOR THIS ROLE:
+[Specific advantages — reference concrete achievements and metrics from his background that map to their requirements]
+
+HONEST GAPS:
+[Any genuine shortcomings or areas where their requirements exceed his direct experience — do not omit these]
+
+VERDICT:
+[1-2 direct sentences addressing whether Alexander warrants serious consideration for this role and why]
+
+SUGGESTED NEXT STEP:
+[One concrete recommendation — e.g. schedule an exploratory call, review his portfolio architecture section, contact him directly at alex.logan@gmail.com]`;
+
+  try {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 1000,
+        messages: [{ role: "user", content: prompt }]
+      })
+    });
+    const data = await response.json();
+    const text = data.content.map(i => i.text || "").join("\n");
+    resultEl.textContent = text;
+    resultEl.style.display = 'block';
+  } catch (err) {
+    resultEl.textContent = 'Evaluation unavailable at this time. Please contact Alexander directly at alex.logan@gmail.com';
+    resultEl.style.display = 'block';
+  } finally {
+    loadingEl.style.display = 'none';
+  }
+}
+
+let qaHistory = [];
+
+async function askQuestion() {
+  const input = document.getElementById('qa-input');
+  const question = input.value.trim();
+  if (!question) return;
+  
+  const chatEl = document.getElementById('chat-history');
+  const loadingEl = document.getElementById('qa-loading');
+  
+  // Add user message
+  qaHistory.push({ role: 'user', content: question });
+  const userBubble = document.createElement('div');
+  userBubble.style.cssText = 'background: var(--steel); padding: 0.6rem 0.9rem; font-size: 0.83rem; color: #dde6f0; align-self: flex-end; max-width: 85%; line-height: 1.5;';
+  userBubble.textContent = question;
+  chatEl.appendChild(userBubble);
+  input.value = '';
+  chatEl.scrollTop = chatEl.scrollHeight;
+  loadingEl.style.display = 'block';
+
+  const systemPrompt = `You are a knowledgeable, direct representative answering questions about Alexander Logan on his professional portfolio. You have complete information about his background, experience, working style, and availability. Answer concisely and honestly — including genuine limitations where relevant. Never fabricate. If you genuinely do not know something specific, say so and direct them to contact Alexander directly at alex.logan@gmail.com.
+
+${ALEXANDER_PROFILE}`;
+
+  const messages = qaHistory.map(m => ({ role: m.role, content: m.content }));
+  const systemMessage = systemPrompt;
+
+  try {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 1000,
+        system: systemMessage,
+        messages: messages
+      })
+    });
+    const data = await response.json();
+    const answer = data.content.map(i => i.text || "").join("\n");
+    
+    qaHistory.push({ role: 'assistant', content: answer });
+    
+    const aiBubble = document.createElement('div');
+    aiBubble.style.cssText = 'background: var(--fog); border-left: 2px solid var(--teal); padding: 0.6rem 0.9rem; font-size: 0.83rem; color: #b4c4d6; max-width: 92%; line-height: 1.6;';
+    aiBubble.textContent = answer;
+    chatEl.appendChild(aiBubble);
+    chatEl.scrollTop = chatEl.scrollHeight;
+  } catch (err) {
+    const errBubble = document.createElement('div');
+    errBubble.style.cssText = 'background: var(--fog); border-left: 2px solid var(--teal); padding: 0.6rem 0.9rem; font-size: 0.83rem; color: #b4c4d6;';
+    errBubble.textContent = 'Unable to respond at this time. Please contact Alexander at alex.logan@gmail.com';
+    chatEl.appendChild(errBubble);
+  } finally {
+    loadingEl.style.display = 'none';
+    chatEl.scrollTop = chatEl.scrollHeight;
+  }
+}
+</script>
 
 <!-- CONTACT -->
 <section id="contact">
