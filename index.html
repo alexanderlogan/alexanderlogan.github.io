@@ -1470,7 +1470,7 @@
       </div>
       <div id="chat-history" style="min-height: 100px; max-height: 280px; overflow-y: auto; background: var(--fog); border: 1px solid var(--rule); padding: 1rem; display: flex; flex-direction: column; gap: 0.8rem;"></div>
       <div style="display: flex; gap: 0.8rem;">
-        <input id="qa-input" type="text" placeholder="e.g. Has Alexander worked in fintech?" style="flex: 1; background: var(--fog); border: 1px solid var(--rule); color: #b4c4d6; font-family: 'IBM Plex Sans', sans-serif; font-size: 0.85rem; padding: 0.8rem 1rem; outline: none;" onkeydown="if(event.key==='Enter') askQuestion()" />
+        <input id="qa-input" type="text" placeholder="e.g. Has Alexander worked in fintech?" style="flex: 1; background: var(--fog); border: 1px solid var(--rule); color: #b4c4d6; font-family: 'IBM Plex Sans', sans-serif; font-size: 0.85rem; padding: 0.8rem 1rem; outline: none;" />
         <button onclick="askQuestion()" style="font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--ink); background: var(--teal); border: none; padding: 0.8rem 1.2rem; cursor: pointer; white-space: nowrap; transition: background 0.2s;">Ask →</button>
       </div>
       <div id="qa-loading" style="display:none; font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem; color: var(--teal); letter-spacing: 0.15em;">THINKING...</div>
@@ -1639,7 +1639,7 @@ SUGGESTED NEXT STEP:
 [One concrete recommendation — e.g. schedule an exploratory call, review his portfolio architecture section, contact him directly at alex.logan@gmail.com]`;
 
   try {
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
+    const response = await fetch("/api/claude-proxy", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -1688,7 +1688,7 @@ ${ALEXANDER_PROFILE}`;
   const systemMessage = systemPrompt;
 
   try {
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
+    const response = await fetch("/api/claude-proxy", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -1718,6 +1718,15 @@ ${ALEXANDER_PROFILE}`;
     chatEl.scrollTop = chatEl.scrollHeight;
   }
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+  const qaInput = document.getElementById('qa-input');
+  if (qaInput) {
+    qaInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') askQuestion();
+    });
+  }
+});
 </script>
 
 <!-- CONTACT -->
