@@ -1584,10 +1584,13 @@ async function evaluateFit() {
     "VERDICT:\n[1-2 direct sentences on whether Alexander warrants serious consideration]\n\n" +
     "SUGGESTED NEXT STEP:\n[One concrete recommendation]";
 
+  var controller = new AbortController();
+  var timeout = setTimeout(function() { controller.abort(); }, 30000);
   try {
     var response = await fetch("/api/claude-proxy", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      signal: controller.signal,
       body: JSON.stringify({
         model: "claude-sonnet-4-6",
         max_tokens: 1000,
@@ -1604,6 +1607,7 @@ async function evaluateFit() {
     resultEl.textContent = "Evaluation unavailable at this time. Please contact Alexander directly at alex.logan@gmail.com";
     resultEl.style.display = "block";
   } finally {
+    clearTimeout(timeout);
     loadingEl.style.display = "none";
   }
 }

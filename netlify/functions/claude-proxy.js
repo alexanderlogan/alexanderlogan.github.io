@@ -56,6 +56,9 @@ exports.handler = async function(event, context) {
         res.on('end', () => resolve({ status: res.statusCode, body: data }));
       });
 
+      req.setTimeout(25000, () => {
+        req.destroy(new Error('Request to Anthropic timed out'));
+      });
       req.on('error', reject);
       req.write(payload);
       req.end();
