@@ -31,13 +31,16 @@ jobs:
           LATEST=$(echo "$RESPONSE" | jq -r '[.data[].id | select(test("claude-sonnet"))] | sort | last')
           echo "model=$LATEST" >> $GITHUB_OUTPUT
 
-      - name: Open issue if newer model available
+      - name: Open issue and send email if newer model available
         if: steps.latest.outputs.model != steps.current.outputs.model
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
         run: |
           CURRENT="${{ steps.current.outputs.model }}"
           LATEST="${{ steps.latest.outputs.model }}"
+          REPO="${{ github.repository }}"
 
           # Skip if an open issue for this model already exists
           EXISTING=$(gh issue list --state open --search "Update Claude model to $LATEST" --json number --jq length)
@@ -46,7 +49,7 @@ jobs:
             exit 0
           fi
 
-          gh issue create \
+          ISSUE_URL=$(gh issue create \
             --title "Update Claude model to $LATEST" \
             --body "**Current model:** \`$CURRENT\`
 **Available model:** \`$LATEST\`
@@ -56,4 +59,57 @@ Update the model string in:
 - \`netlify/functions/claude-proxy.js\` (1 occurrence)
 
 Run \`grep -n claude-sonnet index.html netlify/functions/claude-proxy.js\` to find all lines." \
-            --label "maintenance"
+            --label "maintenance")
+
+          # Send email via Gmail SMTP using curl
+          cat > /tmp/email.txt << EOF
+          From: $GMAIL_USER
+          To: alex@lloystrategy.com
+          Subject: Action required: update Claude model on alexanderlogan.github.io
+          Content-Type: text/plain
+
+          A newer Claude Sonnet model is available. Your site will stop working if you do not update it.
+
+          Current model : $CURRENT
+          New model     : $LATEST
+          GitHub issue  : $ISSUE_URL
+
+          ---------------------------------------------------------------
+          HOW TO UPDATE (takes about 2 minutes)
+          ---------------------------------------------------------------
+
+          1. Open your repository on GitHub:
+             https://github.com/$REPO
+
+          2. Update index.html (4 occurrences):
+             a. Click on index.html in the file list
+             b. Click the pencil icon (Edit this file)
+             c. Press Ctrl+H (Find and replace)
+             d. Find    : $CURRENT
+                Replace : $LATEST
+             e. Click "Commit changes" -> "Commit directly to main" -> "Commit changes"
+
+          3. Update netlify/functions/claude-proxy.js (1 occurrence):
+             a. Navigate to netlify/functions/claude-proxy.js
+             b. Click the pencil icon
+             c. Replace $CURRENT with $LATEST on the model line
+             d. Commit directly to main
+
+          4. Netlify will auto-redeploy within ~1 minute. No further action needed.
+
+          5. Close the GitHub issue once done:
+             $ISSUE_URL
+
+          ---------------------------------------------------------------
+          This check runs daily. You will not receive another email for
+          this model version. A new email will arrive only if an even
+          newer model becomes available.
+          ---------------------------------------------------------------
+          EOF
+
+          curl --ssl-reqd \
+            --url "smtps://smtp.gmail.com:465" \
+            --user "$GMAIL_USER:$GMAIL_APP_PASSWORD" \
+            --mail-from "$GMAIL_USER" \
+            --mail-rcpt "alex@lloystrategy.com" \
+            --upload-file /tmp/email.txt
