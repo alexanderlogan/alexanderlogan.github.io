@@ -1634,10 +1634,13 @@ async function askQuestion() {
 
   var messages = qaHistory.map(function(m) { return { role: m.role, content: m.content }; });
 
+  var qaController = new AbortController();
+  var qaTimeout = setTimeout(function() { qaController.abort(); }, 30000);
   try {
     var response = await fetch("/api/claude-proxy", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      signal: qaController.signal,
       body: JSON.stringify({
         model: "claude-sonnet-4-6",
         max_tokens: 1000,
@@ -1645,6 +1648,7 @@ async function askQuestion() {
         messages: messages
       })
     });
+    if (!response.ok) { throw new Error("API error: " + response.status); }
     var data = await response.json();
     var answer = data.content.map(function(i) { return i.text || ""; }).join("\n");
     qaHistory.push({ role: "assistant", content: answer });
@@ -1660,6 +1664,7 @@ async function askQuestion() {
     errBubble.textContent = "Unable to respond at this time. Please contact Alexander at alex.logan@gmail.com";
     chatEl.appendChild(errBubble);
   } finally {
+    clearTimeout(qaTimeout);
     loadingEl.style.display = "none";
     chatEl.scrollTop = chatEl.scrollHeight;
   }
@@ -1675,36 +1680,28 @@ document.addEventListener("DOMContentLoaded", function() {
   loadCounters();
 });
 
-async function incrementCounter(type) {
+function incrementCounter(type) {
   try {
+    var key = type + "_events";
     var now = Date.now();
-    var key = "counter:" + type;
-    var existing = null;
-    try { existing = await window.storage.get(key, true); } catch(e) {}
-    var events = existing ? JSON.parse(existing.value) : [];
+    var raw = localStorage.getItem(key);
+    var events = raw ? JSON.parse(raw) : [];
     events.push(now);
-    // Keep only last 30 days of events
     var cutoff = now - 30 * 24 * 60 * 60 * 1000;
     events = events.filter(function(t) { return t > cutoff; });
-    await window.storage.set(key, JSON.stringify(events), true);
+    localStorage.setItem(key, JSON.stringify(events));
     updateCounterDisplay(type, events);
   } catch(e) {}
 }
 
-async function loadCounters() {
+function loadCounters() {
   try {
-    var types = ["fit", "qa"];
-    for (var i = 0; i < types.length; i++) {
-      var type = types[i];
-      var key = "counter:" + type;
+    ["fit", "qa"].forEach(function(type) {
       try {
-        var existing = await window.storage.get(key, true);
-        if (existing) {
-          var events = JSON.parse(existing.value);
-          updateCounterDisplay(type, events);
-        }
+        var raw = localStorage.getItem(type + "_events");
+        if (raw) updateCounterDisplay(type, JSON.parse(raw));
       } catch(e) {}
-    }
+    });
   } catch(e) {}
 }
 
@@ -1737,7 +1734,6 @@ function updateCounterDisplay(type, events) {
 </footer>
 
 <script>
-
   // ── SCROLL REVEAL ──────────────────────────────────────────────
   const observer = new IntersectionObserver((entries) => {
     entries.forEach((entry) => {
@@ -1753,245 +1749,6 @@ function updateCounterDisplay(type, events) {
   document.querySelectorAll('.impact-grid .impact-card, .gov-grid .gov-card, .articles-grid .article-card').forEach((el, i) => {
     el.style.transitionDelay = (i * 0.07) + 's';
   });
-
-  // ── 7-DAY USAGE COUNTERS ──────────────────────────────────────
-  function getEvents(key) {
-    try {
-      var raw = localStorage.getItem(key);
-      return raw ? JSON.parse(raw) : [];
-    } catch(e) { return []; }
-  }
-
-  function addEvent(key) {
-    var events = getEvents(key);
-    var now = Date.now();
-    var week = 7 * 24 * 60 * 60 * 1000;
-    events = events.filter(function(t) { return now - t < week; });
-    events.push(now);
-    try { localStorage.setItem(key, JSON.stringify(events)); } catch(e) {}
-    return events.length;
-  }
-
-  function getCount(key) {
-    var events = getEvents(key);
-    var now = Date.now();
-    var week = 7 * 24 * 60 * 60 * 1000;
-    return events.filter(function(t) { return now - t < week; }).length;
-  }
-
-  function updateCounterDisplay(elId, key) {
-    var el = document.getElementById(elId);
-    if (el) el.textContent = getCount(key) + ' / 7d';
-  }
-
-  updateCounterDisplay('eval-counter', 'eval_events');
-  updateCounterDisplay('qa-counter', 'qa_events');
-
-  // ── JOB FIT EVALUATOR ─────────────────────────────────────────
-  var PROFILE = {
-    name: "Alexander Logan",
-    title: "Fractional Chief AI Officer | Enterprise AI Transformation, Governance, and Platform Architecture",
-    location: "Boston, MA",
-    availability: "Immediate",
-    salary: "$200,000+ base",
-    workStyle: "Hybrid or remote preferred, open to occasional travel",
-    notInterested: "Contract-only roles, positions below Director level, roles with no AI scope",
-    summary: "Executive leader specializing in scaling AI from experimentation to enterprise production by aligning platform architecture, engineering delivery, governance frameworks, and organizational change. Delivered $120M+ in documented value across global organizations. MIT-trained C-suite partner for Roland Berger, Accenture, Enel, and PNC, operationalizing strategy into governed, production-ready systems at institutional scale.",
-    education: [
-      "BSBA Finance, Boston University, Questrom School of Business",
-      "MBA International Business, Nyenrode Business Universiteit, Netherlands",
-      "MIT: Machine Learning, Modeling and Simulation",
-      "University of Oxford: AI for Product and Service Development",
-      "INSEAD: Artificial Intelligence and Blockchain",
-      "IBM: Generative AI and LLM Architecture; Python for AI Development"
-    ],
-    technicalSkills: [
-      "GraphRAG", "LangGraph", "ChromaDB", "Redis Graph", "Neo4j",
-      "LangChain", "LlamaIndex", "Ollama", "n8n",
-      "AWS (Firehose, X-Ray, Lambda)", "Splunk", "Kafka",
-      "Python", "SQL", "REST APIs",
-      "MLOps", "AI Governance", "Enterprise AI Strategy"
-    ],
-    achievements: [
-      "GenAI infrastructure with GraphRAG for $800M+ digital asset custody — 30% faster onboarding, 38% inference cost reduction",
-      "AI observability stack (Neo4j, ChromaDB) preventing $15M+ in operational losses across 14M users, 18% availability improvement",
-      "Global IoT data platform reengineering — 5M+ devices, 230% throughput increase, sub-minute latency across 20+ markets",
-      "Distributed team leadership across 8 countries — 90% velocity increase, 40% time-to-market reduction",
-      "Enterprise AI governance and MLOps frameworks for production ML in regulated financial environments",
-      "Digital transformation programme — EUR 16M budget, 3 countries, 60% release velocity acceleration",
-      "Blockchain-enabled digital asset custody — $600M+ cross-border settlement infrastructure",
-      "Semantic search and AI-driven content distribution metadata systems",
-      "Enterprise transformation for international retailer — EUR 80M P&L, 4 business lines, 3 countries",
-      "Fintech AI strategy and product leadership — $800M+ in digital asset activity"
-    ],
-    roles: [
-      "Chief AI Officer (Fractional) — CloudTech Group",
-      "Head of AI & Platform Observability — PNC Financial Services",
-      "Senior Technical Product Manager — ENEL (World's Largest Energy Company)",
-      "Manager of Product and Platform Services — Accenture",
-      "Director of Enterprise Transformation and Strategy — Roland Berger (Top European Strategy Consultancy)"
-    ]
-  };
-
-  var FRAMEWORK = {
-    dimensions: [
-      { name: "Role Alignment", weight: 30 },
-      { name: "Level Match", weight: 20 },
-      { name: "Technical Fit", weight: 15 },
-      { name: "Domain Relevance", weight: 15 },
-      { name: "Company Quality", weight: 10 },
-      { name: "Compensation Signal", weight: 10 }
-    ]
-  };
-
-  function buildEvalPrompt(jd) {
-    return "You are an expert executive recruiter evaluating a candidate for a role. " +
-      "Assess fit honestly and directly, addressing your response to the hiring party. " +
-      "Use the six-dimension framework below. Score each dimension from 0.0 to 10.0. " +
-      "Compute a weighted overall FIT SCORE from 0.0 to 10.0.\n\n" +
-      "SCORING FRAMEWORK:\n" +
-      "- Role Alignment (30%): Does the candidate's actual work history match what this role requires day-to-day?\n" +
-      "- Level Match (20%): Is the seniority, scope, and autonomy appropriate?\n" +
-      "- Technical Fit (15%): Do the specific technologies and methods align?\n" +
-      "- Domain Relevance (15%): Does the industry experience transfer?\n" +
-      "- Company Quality (10%): Is the candidate's pedigree credible for this organisation?\n" +
-      "- Compensation Signal (10%): Is the role likely to meet the candidate's expectations?\n\n" +
-      "CANDIDATE PROFILE:\n" + JSON.stringify(PROFILE, null, 2) + "\n\n" +
-      "JOB DESCRIPTION:\n" + jd + "\n\n" +
-      "Respond in this exact format:\n\n" +
-      "FIT SCORE: X.X / 10\n\n" +
-      "DIMENSION SCORES:\n" +
-      "- Role Alignment (30%): X.X\n" +
-      "- Level Match (20%): X.X\n" +
-      "- Technical Fit (15%): X.X\n" +
-      "- Domain Relevance (15%): X.X\n" +
-      "- Company Quality (10%): X.X\n" +
-      "- Compensation Signal (10%): X.X\n\n" +
-      "WHY ALEXANDER IS STRONG FOR THIS ROLE:\n[3-5 specific reasons grounded in evidence from his profile]\n\n" +
-      "HONEST GAPS:\n[2-3 genuine gaps or risks, if any. Do not invent gaps if there are none.]\n\n" +
-      "VERDICT:\n[One direct paragraph. Would you recommend progressing this candidate?]\n\n" +
-      "SUGGESTED NEXT STEP:\n[One specific recommendation for the hiring team.]";
-  }
-
-  var evalBtn = document.getElementById('eval-btn');
-  var evalInput = document.getElementById('eval-input');
-  var evalOutput = document.getElementById('eval-output');
-
-  if (evalBtn) {
-    evalBtn.addEventListener('click', async function() {
-      var jd = evalInput ? evalInput.value.trim() : '';
-      if (!jd) {
-        evalOutput.textContent = 'Please paste a job description above.';
-        return;
-      }
-      evalBtn.disabled = true;
-      evalBtn.textContent = 'Evaluating...';
-      evalOutput.textContent = '';
-
-      try {
-        var response = await fetch('/api/claude-proxy', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            model: 'claude-sonnet-4-6',
-            max_tokens: 1200,
-            messages: [{ role: 'user', content: buildEvalPrompt(jd) }]
-          })
-        });
-
-        var data = await response.json();
-        if (data.content && data.content[0]) {
-          evalOutput.textContent = data.content[0].text;
-          var count = addEvent('eval_events');
-          var cEl = document.getElementById('eval-counter');
-          if (cEl) cEl.textContent = count + ' / 7d';
-        } else {
-          evalOutput.textContent = 'Evaluation could not be completed. Please try again.';
-        }
-      } catch(e) {
-        evalOutput.textContent = 'Connection error. Please try again.';
-      }
-
-      evalBtn.disabled = false;
-      evalBtn.textContent = 'Evaluate Fit';
-    });
-  }
-
-  // ── ASK ALEXANDER Q&A ─────────────────────────────────────────
-  var qaHistory = [];
-
-  var qaSystemPrompt = "You are an AI assistant representing Alexander Logan, an AI Product executive. " +
-    "Answer questions from recruiters, hiring managers, and executives about Alexander's background, skills, experience, and fit. " +
-    "Be direct, professional, and specific. Draw only from the verified profile below. " +
-    "If asked something outside the profile, say so honestly rather than speculating.\n\n" +
-    "ALEXANDER'S PROFILE:\n" + JSON.stringify(PROFILE, null, 2);
-
-  var qaBtn = document.getElementById('qa-btn');
-  var qaInput = document.getElementById('qa-input');
-  var qaMessages = document.getElementById('qa-messages');
-
-  function appendMessage(role, text) {
-    var div = document.createElement('div');
-    div.className = 'qa-message qa-' + role;
-    div.textContent = text;
-    qaMessages.appendChild(div);
-    qaMessages.scrollTop = qaMessages.scrollHeight;
-  }
-
-  async function sendQA() {
-    var question = qaInput ? qaInput.value.trim() : '';
-    if (!question) return;
-
-    appendMessage('user', question);
-    qaInput.value = '';
-    qaBtn.disabled = true;
-    qaBtn.textContent = '...';
-
-    qaHistory.push({ role: 'user', content: question });
-
-    try {
-      var response = await fetch('/api/claude-proxy', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-6',
-          max_tokens: 800,
-          system: qaSystemPrompt,
-          messages: qaHistory
-        })
-      });
-
-      var data = await response.json();
-      if (data.content && data.content[0]) {
-        var answer = data.content[0].text;
-        qaHistory.push({ role: 'assistant', content: answer });
-        appendMessage('assistant', answer);
-        var count = addEvent('qa_events');
-        var cEl = document.getElementById('qa-counter');
-        if (cEl) cEl.textContent = count + ' / 7d';
-      } else {
-        appendMessage('assistant', 'I was unable to retrieve a response. Please try again.');
-      }
-    } catch(e) {
-      appendMessage('assistant', 'Connection error. Please try again.');
-    }
-
-    qaBtn.disabled = false;
-    qaBtn.textContent = 'Send';
-  }
-
-  if (qaBtn) {
-    qaBtn.addEventListener('click', sendQA);
-  }
-  if (qaInput) {
-    qaInput.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        sendQA();
-      }
-    });
-  }
-
 </script>
 </body>
 </html>
