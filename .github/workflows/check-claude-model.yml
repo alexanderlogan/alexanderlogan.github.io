@@ -2,7 +2,7 @@ name: Check for new Claude Sonnet model
 
 on:
   schedule:
-    - cron: '0 9 * * 1'  # Every Monday at 9am UTC
+    - cron: '0 9 * * *'  # Every day at 9am UTC
   workflow_dispatch:      # Allow manual trigger
 
 jobs:
