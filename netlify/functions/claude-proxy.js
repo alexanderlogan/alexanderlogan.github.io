@@ -19,6 +19,7 @@ exports.handler = async function(event, context) {
   }
 
   const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+  const DEFAULT_MODEL = process.env.CLAUDE_MODEL || 'claude-sonnet-4-6';
   if (!ANTHROPIC_API_KEY) {
     return {
       statusCode: 500,
@@ -31,7 +32,7 @@ exports.handler = async function(event, context) {
     const body = JSON.parse(event.body);
 
     const payload = JSON.stringify({
-      model: body.model || 'claude-sonnet-4-6',
+      model: DEFAULT_MODEL,
       max_tokens: body.max_tokens || 1000,
       messages: body.messages,
       ...(body.system ? { system: body.system } : {})
