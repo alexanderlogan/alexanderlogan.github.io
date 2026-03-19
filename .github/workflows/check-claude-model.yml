@@ -1,0 +1,59 @@
+name: Check for new Claude Sonnet model
+
+on:
+  schedule:
+    - cron: '0 9 * * 1'  # Every Monday at 9am UTC
+  workflow_dispatch:      # Allow manual trigger
+
+jobs:
+  check-model:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get current model from source
+        id: current
+        run: |
+          MODEL=$(grep -o 'claude-sonnet-[^"'\'']*' index.html | head -1)
+          echo "model=$MODEL" >> $GITHUB_OUTPUT
+
+      - name: Fetch latest Sonnet model from Anthropic API
+        id: latest
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          RESPONSE=$(curl -sf https://api.anthropic.com/v1/models \
+            -H "x-api-key: $ANTHROPIC_API_KEY" \
+            -H "anthropic-version: 2023-06-01")
+          LATEST=$(echo "$RESPONSE" | jq -r '[.data[].id | select(test("claude-sonnet"))] | sort | last')
+          echo "model=$LATEST" >> $GITHUB_OUTPUT
+
+      - name: Open issue if newer model available
+        if: steps.latest.outputs.model != steps.current.outputs.model
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          CURRENT="${{ steps.current.outputs.model }}"
+          LATEST="${{ steps.latest.outputs.model }}"
+
+          # Skip if an open issue for this model already exists
+          EXISTING=$(gh issue list --state open --search "Update Claude model to $LATEST" --json number --jq length)
+          if [ "$EXISTING" -gt 0 ]; then
+            echo "Issue already open for $LATEST, skipping."
+            exit 0
+          fi
+
+          gh issue create \
+            --title "Update Claude model to $LATEST" \
+            --body "**Current model:** \`$CURRENT\`
+**Available model:** \`$LATEST\`
+
+Update the model string in:
+- \`index.html\` (4 occurrences)
+- \`netlify/functions/claude-proxy.js\` (1 occurrence)
+
+Run \`grep -n claude-sonnet index.html netlify/functions/claude-proxy.js\` to find all lines." \
+            --label "maintenance"
