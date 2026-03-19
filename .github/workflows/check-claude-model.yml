@@ -49,16 +49,11 @@ jobs:
             exit 0
           fi
 
+          BODY=$(printf '**Current model:** `%s`\n**Available model:** `%s`\n\nUpdate the model string in:\n- `index.html` (4 occurrences)\n- `netlify/functions/claude-proxy.js` (1 occurrence)\n\nRun `grep -n claude-sonnet index.html netlify/functions/claude-proxy.js` to find all lines.' "$CURRENT" "$LATEST")
+
           ISSUE_URL=$(gh issue create \
             --title "Update Claude model to $LATEST" \
-            --body "**Current model:** \`$CURRENT\`
-**Available model:** \`$LATEST\`
-
-Update the model string in:
-- \`index.html\` (4 occurrences)
-- \`netlify/functions/claude-proxy.js\` (1 occurrence)
-
-Run \`grep -n claude-sonnet index.html netlify/functions/claude-proxy.js\` to find all lines." \
+            --body "$BODY" \
             --label "maintenance")
 
           # Send email via Gmail SMTP using curl
