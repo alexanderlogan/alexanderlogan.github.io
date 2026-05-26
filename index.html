@@ -180,20 +180,56 @@
   .hero-photo-inner::after { bottom: -6px; left: -6px; border-width: 0 0 2px 2px; }
 
   .hero-logo-wrap {
-    margin-top: 0.4rem;
-    display: flex;
-    justify-content: center;
-    opacity: 0.72;
+    position: relative;
+    width: 300px;
+    height: 300px;
+    flex-shrink: 0;
+    opacity: 0.88;
     transition: opacity 0.3s;
   }
 
-  .hero-logo-wrap:hover { opacity: 0.8; }
+  .hero-logo-wrap::before,
+  .hero-logo-wrap::after {
+    content: '';
+    position: absolute;
+    width: 28px;
+    height: 28px;
+    border-color: var(--accent);
+    border-style: solid;
+    z-index: 2;
+  }
+
+  .hero-logo-wrap::before { top: -6px; left: -6px; border-width: 2px 0 0 2px; }
+  .hero-logo-wrap::after { bottom: -6px; right: -6px; border-width: 0 2px 2px 0; }
+
+  .hero-logo-wrap:hover { opacity: 1; }
+
+  .hero-logo-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+
+  .hero-logo-inner::before,
+  .hero-logo-inner::after {
+    content: '';
+    position: absolute;
+    width: 28px;
+    height: 28px;
+    border-color: var(--accent);
+    border-style: solid;
+    z-index: 2;
+  }
+
+  .hero-logo-inner::before { top: -6px; right: -6px; border-width: 2px 2px 0 0; }
+  .hero-logo-inner::after { bottom: -6px; left: -6px; border-width: 0 0 2px 2px; }
 
   .hero-logo-img {
-    height: 28px;
-    width: auto;
-    object-fit: contain;
-    filter: grayscale(1) invert(1) brightness(1.55) opacity(0.74);
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: brightness(1.2) saturate(1.05);
+    display: block;
   }
 
   .hero-photo-caption { text-align: center; }
@@ -1165,7 +1201,7 @@
   <div class="hero-photo-col">
     <div class="hero-photo-frame">
       <div class="hero-photo-inner">
-        <img src="https://media.licdn.com/dms/image/v2/D4E03AQHUoVBsbfJkvA/profile-displayphoto-shrink_800_800/B4EZZPVhx3GcAg-/0/1745106082498?e=1753920000&v=beta&t=4CtJnnU7BVl2k9NnKDUFn1Bj3k8NkF3M1O4RRwE0UjE" alt="Alexander Logan" id="hero-photo" onerror="this.onerror=null;this.style.display='none';document.getElementById('hero-photo-fallback').style.display='flex';" />
+        <img src="portrait.jpeg" alt="Alexander Logan" id="hero-photo" onerror="this.onerror=null;this.style.display='none';document.getElementById('hero-photo-fallback').style.display='flex';" />
       <div id="hero-photo-fallback" style="display:none;width:100%;height:100%;background:rgba(255,255,255,0.06);align-items:center;justify-content:center;border:1px solid rgba(169,187,203,0.28);"><span style="font-family:'Playfair Display',serif;font-size:5rem;font-weight:700;color:#FFFFFF;opacity:0.18;letter-spacing:-0.03em;line-height:1;">AL</span></div>
       </div>
     </div>
@@ -1174,7 +1210,9 @@
       <div class="hero-photo-role">CAIO &middot; Lloyd Strategy</div>
     </div>
     <div class="hero-logo-wrap">
-      <img src="Lloyd Strategy logo dark.jpg" alt="Lloyd Strategy" class="hero-logo-img" />
+      <div class="hero-logo-inner">
+        <img src="lloyd-strategy-logo.jpg" alt="Lloyd Strategy" class="hero-logo-img" />
+      </div>
     </div>
   </div>
 </section>
