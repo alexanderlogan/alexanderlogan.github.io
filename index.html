@@ -600,6 +600,41 @@
     gap: 0;
   }
 
+  .research-series {
+    margin-bottom: 2.4rem;
+    padding: 1.6rem 1.8rem;
+    background: var(--fog);
+    border: 1px solid var(--rule);
+    border-left: 4px solid var(--accent);
+  }
+
+  .research-series-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    color: var(--label);
+    margin-bottom: 1rem;
+  }
+
+  .research-series .research-card {
+    padding: 0 0 1.4rem;
+    border-bottom: 1px solid var(--rule);
+    margin-bottom: 1.4rem;
+  }
+
+  .research-series .research-card:last-child {
+    padding-bottom: 0;
+    border-bottom: none;
+    margin-bottom: 0;
+  }
+
+  .research-series .research-card:hover {
+    padding-left: 0.8rem;
+    background: transparent;
+  }
+
   .research-card {
     padding: 2.2rem 1.4rem;
     text-decoration: none;
@@ -1335,18 +1370,38 @@
     <a href="https://lloydstrategy.substack.com/" target="_blank" class="btn-primary">Published Research &amp; Analytics &rarr;</a>
   </div>
 
+  <div class="research-series reveal">
+    <div class="research-series-label">AI Security and Trust Series</div>
+    <a href="https://lloydstrategy.substack.com/p/ai-security-and-trust-series-part" target="_blank" class="research-card">
+      <div class="r-tag">Research Series &middot; AI Security &amp; Runtime Trust</div>
+      <div class="r-title">AI Security and Trust Series: Part 1 - Control Plane</div>
+      <div class="r-question">Executive question: How should enterprises convert fragmented AI security controls into runtime decisions, evidence, and accountability?</div>
+      <div class="r-relevance">Defines the control-plane architecture and operating model needed to make enterprise AI security governable while agentic systems are acting.</div>
+    </a>
+  </div>
+
+  <div class="research-series reveal">
+    <div class="research-series-label">Professional Services</div>
+    <a href="https://lloydstrategy.substack.com/p/the-value-migration" target="_blank" class="research-card">
+      <div class="r-tag">Industry Research: Research and Analytics Firms in the Age of AI</div>
+      <div class="r-title">The Value Migration: How AI Is Redefining Which Professional Services Firms Win</div>
+      <div class="r-question">Executive question: How is AI redefining which professional services firms win as cognition becomes cheaper and accountable judgment becomes scarcer?</div>
+      <div class="r-relevance">Examines how value migrates from analytical production toward interpretation, commitment, and named accountability in AI-era advisory markets.</div>
+    </a>
+    <a href="https://lloydstrategy.substack.com/p/from-delivery-to-outcomes-the-gtm" target="_blank" class="research-card">
+      <div class="r-tag">Research &middot; Professional Services GTM</div>
+      <div class="r-title">From Delivery to Outcomes: The GTM Imperative for AI-Era Professional Services</div>
+      <div class="r-question">Executive question: How should services and technology organizations move from project delivery to measurable client outcomes?</div>
+      <div class="r-relevance">Connects operating model design, value accountability, and executive governance to the economics of technology-enabled transformation.</div>
+    </a>
+  </div>
+
   <div class="research-grid">
     <a href="https://lloydstrategy.substack.com/p/from-consumption-to-operating-leverage" target="_blank" class="research-card reveal">
       <div class="r-tag">Research &middot; AI Economics &amp; Governance</div>
       <div class="r-title">From Consumption to Operating Leverage</div>
       <div class="r-question">Executive question: How should the C-suite coordinate AI economics when consumption scales faster than value realization?</div>
       <div class="r-relevance">Reframes AI cost management as a cross-functional operating model issue, not a procurement or infrastructure optimization exercise.</div>
-    </a>
-    <a href="https://lloydstrategy.substack.com/p/from-delivery-to-outcomes-the-gtm" target="_blank" class="research-card reveal">
-      <div class="r-tag">Research &middot; Professional Services GTM</div>
-      <div class="r-title">From Delivery to Outcomes: The GTM Imperative for AI-Era Professional Services</div>
-      <div class="r-question">Executive question: How should services and technology organizations move from project delivery to measurable client outcomes?</div>
-      <div class="r-relevance">Connects operating model design, value accountability, and executive governance to the economics of technology-enabled transformation.</div>
     </a>
     <a href="https://lloydstrategy.substack.com/p/the-absorption-gap" target="_blank" class="research-card reveal">
       <div class="r-tag">Research &middot; Enterprise Operating Models</div>
