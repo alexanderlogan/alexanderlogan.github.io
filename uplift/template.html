@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Uplift: Agentic Product Development in Claude Code | Alexander Logan</title>
+<meta name="description" content="A working demonstration of AI-native product management: customer interviews to a reviewed, prioritized backlog, with skills, a critic subagent and a human approval gate.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="marked.min.js"></script>
+<style>
+:root{--exec:#071A2F;--gun:#0B2A45;--slate:#123A5A;--steel:#A9BBCB;--accent:#1F5F8B;--teal:#2E6F73;--fog:#E8F0F7;--paper:#F8FAFC;--line:#DCE5ED;--text:#0B1F33;--muted:#5F7F99;--warn:#9A5B13}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:'IBM Plex Sans',sans-serif;color:var(--text);background:var(--paper);line-height:1.6;font-size:16px}
+a{color:var(--accent)}
+.wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+.mono{font-family:'IBM Plex Mono',monospace}
+header.hero{background:var(--exec);color:#F4F7FA;padding:28px 0 72px}
+nav.top{display:flex;justify-content:space-between;align-items:center;font-size:14px;margin-bottom:56px}
+nav.top a{color:var(--steel);text-decoration:none}
+nav.top a:hover{color:#fff}
+.eyebrow{font-family:'IBM Plex Mono',monospace;font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--steel)}
+h1{font-family:'Playfair Display',serif;font-weight:900;font-size:clamp(34px,5vw,56px);line-height:1.1;margin:14px 0 20px;max-width:820px}
+.lede{font-size:19px;font-weight:300;max-width:720px;color:#D6E1EA}
+.cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:32px}
+.btn{display:inline-block;padding:12px 20px;border-radius:4px;font-weight:500;text-decoration:none;font-size:15px}
+.btn.primary{background:#fff;color:var(--exec)}
+.btn.ghost{border:1px solid var(--steel);color:#F4F7FA}
+section{padding:72px 0;border-bottom:1px solid var(--line)}
+h2{font-family:'Playfair Display',serif;font-size:clamp(26px,3.4vw,36px);margin:8px 0 16px;color:var(--exec)}
+.sub{color:var(--muted);max-width:720px;margin:0 0 36px}
+.pipeline{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;counter-reset:s}
+.stage{background:#fff;border:1px solid var(--line);border-radius:6px;padding:16px 14px;position:relative}
+.stage .n{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted)}
+.stage h3{font-size:15px;margin:6px 0 6px;color:var(--exec)}
+.stage p{font-size:13px;margin:0;color:#34495E}
+.stage .tag{display:inline-block;margin-top:10px;font-family:'IBM Plex Mono',monospace;font-size:11px;padding:2px 7px;border-radius:3px;background:var(--fog);color:var(--slate)}
+.stage.gate{background:var(--exec);border-color:var(--exec)}
+.stage.gate h3,.stage.gate p{color:#F4F7FA}.stage.gate .n{color:var(--steel)}
+.stage.gate .tag{background:var(--teal);color:#fff}
+.principles{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
+.card{background:#fff;border:1px solid var(--line);border-radius:6px;padding:22px}
+.card h3{margin:0 0 6px;font-size:17px;color:var(--exec)}
+.card p{margin:0;color:#34495E;font-size:15px}
+.voices{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
+.voice{background:#fff;border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:6px;padding:20px}
+.voice .who{font-weight:600;color:var(--exec)}
+.voice .org{font-size:14px;color:var(--muted)}
+.voice blockquote{margin:12px 0;font-family:'Playfair Display',serif;font-size:18px;line-height:1.4;color:var(--slate)}
+details{margin-top:6px}
+summary{cursor:pointer;font-size:14px;color:var(--accent);font-weight:500}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:0}
+.tab{border:1px solid var(--line);border-bottom:none;background:var(--fog);padding:9px 14px;border-radius:6px 6px 0 0;font-size:14px;cursor:pointer;font-family:inherit;color:var(--slate)}
+.tab small{display:block;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.tab[aria-selected=true]{background:#fff;color:var(--exec);font-weight:600}
+.panel{background:#fff;border:1px solid var(--line);border-radius:0 6px 6px 6px;padding:26px 30px;max-height:640px;overflow:auto}
+.panel pre.src{white-space:pre-wrap;font-family:'IBM Plex Mono',monospace;font-size:13px;line-height:1.55;margin:0;color:#1d2f40}
+.md h1{font-size:26px;margin:0 0 10px;font-family:'Playfair Display',serif;color:var(--exec)}
+.md h2{font-size:20px;margin:26px 0 8px}
+.md h3{font-size:16px;margin:20px 0 6px;color:var(--exec)}
+.md blockquote{margin:0 0 16px;padding:10px 14px;background:var(--fog);border-left:3px solid var(--accent);color:var(--slate);font-size:14px}
+.md table{border-collapse:collapse;width:100%;font-size:14px;margin:10px 0 18px;display:block;overflow-x:auto}
+.md th,.md td{border:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top}
+.md th{background:var(--paper)}
+.md li{margin:4px 0}
+.note{font-size:14px;color:var(--warn);background:#FBF4EA;border:1px solid #EED9BC;border-radius:6px;padding:10px 14px;margin-bottom:18px}
+ol.steps{padding-left:20px}ol.steps li{margin:8px 0}
+code{font-family:'IBM Plex Mono',monospace;font-size:.92em;background:var(--fog);padding:1px 6px;border-radius:3px}
+footer{background:var(--exec);color:var(--steel);padding:36px 0;font-size:14px}
+footer a{color:#F4F7FA}
+@media (max-width:900px){.pipeline{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:640px){.principles,.voices{grid-template-columns:1fr}.panel{padding:18px}section{padding:52px 0}.lede{font-size:17px}}
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="wrap">
+    <nav class="top"><a href="/">&larr; Alexander Logan</a><a href="https://github.com/alexanderlogan/alexanderlogan.github.io/tree/main/uplift">View the code on GitHub</a></nav>
+    <div class="eyebrow">Agentic product development &middot; Claude Code</div>
+    <h1>From customer interviews to a reviewed backlog, with humans at the decision points.</h1>
+    <p class="lede">A working pipeline that shows how a product team can encode its standards as reusable skills, have an independent agent challenge its own work, and move from raw research to prioritized stories in a single session.</p>
+    <div class="cta"><a class="btn primary" href="#run">See the example run</a><a class="btn ghost" href="#system">Inspect the skills</a></div>
+  </div>
+</header>
+
+<section id="how"><div class="wrap">
+  <div class="eyebrow">How it works</div>
+  <h2>Six stages, one approval gate</h2>
+  <p class="sub">Each stage is a plain-markdown skill or subagent in the project's <code>.claude</code> folder. The <code>/run-pipeline</code> command chains them and stops for a human decision before anything becomes work for engineering.</p>
+  <div class="pipeline">
+    <div class="stage"><div class="n">01</div><h3>Synthesize research</h3><p>Themes and jobs-to-be-done, every claim cited to a speaker.</p><span class="tag">skill</span></div>
+    <div class="stage"><div class="n">02</div><h3>Draft the PRD</h3><p>Every Must requirement traces to evidence. Non-goals explicit.</p><span class="tag">skill</span></div>
+    <div class="stage"><div class="n">03</div><h3>Critic review</h3><p>Engineering, privacy and end-user lenses challenge the draft.</p><span class="tag">subagent</span></div>
+    <div class="stage gate"><div class="n">04</div><h3>Human approval</h3><p>The PM accepts, edits or rejects. The pipeline waits.</p><span class="tag">gate</span></div>
+    <div class="stage"><div class="n">05</div><h3>Write stories</h3><p>INVEST stories with Given/When/Then, including edge cases.</p><span class="tag">skill</span></div>
+    <div class="stage"><div class="n">06</div><h3>Prioritize</h3><p>RICE with the arithmetic shown, and a release cut.</p><span class="tag">skill</span></div>
+  </div>
+</div></section>
+
+<section id="product"><div class="wrap">
+  <div class="eyebrow">The product under discovery</div>
+  <h2>Uplift: AI adoption analytics for knowledge workers</h2>
+  <p class="sub">A fictional product chosen because it is the problem every organization rolling out AI tools faces now: leaders need proof of value, employees need trust. Four invented customer interviews pull in different directions.</p>
+  <div class="voices" id="voices"></div>
+</div></section>
+
+<section id="system"><div class="wrap">
+  <div class="eyebrow">The system</div>
+  <h2>The team's playbook, written as skills</h2>
+  <p class="sub">These are the actual files the agent runs. Because they are plain markdown, the method is portable across models and platforms, and a team can review and improve them like any other shared asset.</p>
+  <div class="tabs" role="tablist" id="sysTabs"></div>
+  <div class="panel" id="sysPanel" role="tabpanel"></div>
+</div></section>
+
+<section id="run"><div class="wrap">
+  <div class="eyebrow">Example run</div>
+  <h2>What comes out the other end</h2>
+  <p class="sub">One run of the pipeline on the four interviews. The human approved the PRD after accepting three of the critic's four fixes. Note how the critic's privacy finding becomes the top-ranked story.</p>
+  <div class="note">Example output for illustration. All customers and data are fictional, and a fresh run will produce different wording.</div>
+  <div class="tabs" role="tablist" id="outTabs"></div>
+  <div class="panel md" id="outPanel" role="tabpanel"></div>
+</div></section>
+
+<section id="principles"><div class="wrap">
+  <div class="eyebrow">Principles</div>
+  <h2>What this demonstrates for product teams</h2>
+  <div class="principles">
+    <div class="card"><h3>Humans decide, agents draft and challenge</h3><p>The approval gate is built into the command, not left to discipline. Agents accelerate the work; accountability stays with the PM.</p></div>
+    <div class="card"><h3>Evidence over assertion</h3><p>Uncited research claims are not allowed. Requirements trace to themes; priorities show their arithmetic. Hallucinated insight has nowhere to hide.</p></div>
+    <div class="card"><h3>Standards become shared assets</h3><p>A team's best practice lives in skills anyone can run, review and improve, instead of in one power user's head.</p></div>
+    <div class="card"><h3>Measure the cycle, not the logins</h3><p>Adoption is proven by time from research to approved spec and by story rework rate, not by how often people open a tool.</p></div>
+  </div>
+</div></section>
+
+<section id="try"><div class="wrap">
+  <div class="eyebrow">Run it yourself</div>
+  <h2>Three steps</h2>
+  <ol class="steps">
+    <li>Copy the <a href="https://github.com/alexanderlogan/alexanderlogan.github.io/tree/main/uplift"><code>uplift</code> folder</a> to your machine.</li>
+    <li>Open it in Claude Code: run <code>claude</code> in a terminal, or use the Code tab in the Claude desktop app.</li>
+    <li>Clear the <code>output</code> folder and type <code>/run-pipeline</code>. Approve the PRD when asked.</li>
+  </ol>
+</div></section>
+
+<footer><div class="wrap">Built by <a href="/">Alexander Logan</a> &middot; Enterprise AI strategy and agentic ways of working &middot; <a href="https://lloydstrategy.com/">Lloyd Strategy</a></div></footer>
+
+<script>
+const DATA = /*__DATA__*/null;
+const md = t => (window.marked ? marked.parse(t) : '<pre class="src">'+esc(t)+'</pre>');
+function esc(s){return s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}
+
+// Interview cards: pull role line and one standout quote
+const quotes = {
+  "01": "I can tell them how many people logged in. That's it.",
+  "02": "Maybe fifteen of them have built real workflows. The other hundred mostly use it to rewrite emails.",
+  "03": "If my manager sees I finish in two hours what used to take eight, I get six more hours of work, not credit.",
+  "04": "If it's designed for privacy from day one, a few months. If not, never."
+};
+document.getElementById('voices').innerHTML = DATA.interviews.map(iv => {
+  const m = iv.text.match(/Interviewee:\s*([^,]+),\s*([^,]+),\s*(.+)/);
+  const id = iv.file.slice(0,2);
+  return `<div class="voice"><div class="who">${esc(m?m[1]+', '+m[2]:iv.file)}</div><div class="org">${esc(m?m[3]:'')}</div>
+  <blockquote>&ldquo;${esc(quotes[id]||'')}&rdquo;</blockquote>
+  <details><summary>Read the full interview</summary><div class="md">${md(iv.text)}</div></details></div>`;
+}).join('');
+
+function tabs(tabEl, panelEl, items, render, sublabel){
+  tabEl.innerHTML = items.map((it,i)=>`<button class="tab" role="tab" aria-selected="${i===0}" data-i="${i}">${sublabel?`<small>${esc(it.kind)}</small>`:''}${esc(it.label)}</button>`).join('');
+  const show = i => {
+    tabEl.querySelectorAll('.tab').forEach(b=>b.setAttribute('aria-selected', b.dataset.i==i));
+    panelEl.innerHTML = render(items[i]); panelEl.scrollTop = 0;
+  };
+  tabEl.addEventListener('click', e => { const b = e.target.closest('.tab'); if (b) show(+b.dataset.i); });
+  show(0);
+}
+tabs(document.getElementById('sysTabs'), document.getElementById('sysPanel'), DATA.system,
+  it => `<div class="mono" style="font-size:12px;color:var(--muted);margin-bottom:12px">${esc(it.path)}</div><pre class="src">${esc(it.text)}</pre>`, true);
+tabs(document.getElementById('outTabs'), document.getElementById('outPanel'), DATA.outputs, it => md(it.text), false);
+</script>
+</body>
+</html>
