@@ -66,3 +66,4 @@
 @media (max-width:420px){.lr-track{grid-template-columns:1fr}}
 .lr-opt{display:inline-flex;align-items:center;gap:7px;font-size:14px;color:var(--slate);cursor:pointer}
 .lr-opt input{width:16px;height:16px;accent-color:var(--teal)}
+.lr-fail{margin:0 0 14px;padding:10px 14px;border:1px solid #E6B8AE;background:#FBEDEA;color:#A23B2A;border-radius:4px;font-size:14px}

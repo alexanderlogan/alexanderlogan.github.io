@@ -31,6 +31,15 @@ const json = (data, status = 200) =>
     headers: { "content-type": "application/json", "cache-control": "no-store" },
   });
 
+// Overloaded (529), rate-limited (429) or server-side (5xx) errors, including ones that arrive
+// mid-stream as an error event without an HTTP status.
+function isTransient(err) {
+  const s = err?.status;
+  if (s === 429 || s === 529 || (s >= 500 && s < 600)) return true;
+  const type = err?.error?.error?.type || err?.error?.type || "";
+  return /overloaded|rate_limit|api_error/.test(type) || /overloaded/i.test(err?.message || "");
+}
+
 async function sha256(s) {
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
   return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("").slice(0, 32);
@@ -107,26 +116,51 @@ async function stage(store, body) {
     async start(ctrl) {
       const send = (event, data) => ctrl.enqueue(enc.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`));
       const t0 = Date.now();
+      // Batch deltas into ~100ms chunks: far fewer events to encode keeps the function well
+      // inside the edge CPU limit on long stages like the critic review.
+      const buf = { thinking: "", text: "" };
+      let lastFlush = Date.now();
+      const flush = () => {
+        for (const k of ["thinking", "text"]) if (buf[k]) { send(k, { t: buf[k] }); buf[k] = ""; }
+        lastFlush = Date.now();
+      };
+      const request = {
+        model,
+        max_tokens: MAX_TOKENS,
+        thinking: { type: "adaptive", display: "summarized" },
+        // At "medium", adaptive thinking often skips reasoning on these tasks, leaving the
+        // page's reasoning panel empty. "high" is Sonnet 5.5's default.
+        output_config: { effort: run.effort || env("UPLIFT_EFFORT", "high") },
+        // If a safety classifier declines, the API re-runs the request on a fallback model.
+        betas: ["server-side-fallback-2026-07-01"],
+        fallbacks: "default",
+        system,
+        messages,
+      };
       try {
-        const s = client.beta.messages.stream({
-          model,
-          max_tokens: MAX_TOKENS,
-          thinking: { type: "adaptive", display: "summarized" },
-          // At "medium", adaptive thinking often skips reasoning on these tasks, leaving the
-          // page's reasoning panel empty. "high" is Sonnet 5.5's default.
-          output_config: { effort: run.effort || env("UPLIFT_EFFORT", "high") },
-          // If a safety classifier declines, the API re-runs the request on a fallback model.
-          betas: ["server-side-fallback-2026-07-01"],
-          fallbacks: "default",
-          system,
-          messages,
-        });
-        for await (const ev of s) {
-          if (ev.type !== "content_block_delta") continue;
-          if (ev.delta.type === "thinking_delta") send("thinking", { t: ev.delta.thinking });
-          else if (ev.delta.type === "text_delta") send("text", { t: ev.delta.text });
+        // Overloaded or rate-limited API: retry the stage, telling the page to clear what it
+        // has streamed so far. The SDK already retries errors before the stream starts.
+        let msg;
+        for (let attempt = 1; ; attempt++) {
+          try {
+            const s = client.beta.messages.stream(request);
+            for await (const ev of s) {
+              if (ev.type !== "content_block_delta") continue;
+              if (ev.delta.type === "thinking_delta") buf.thinking += ev.delta.thinking;
+              else if (ev.delta.type === "text_delta") buf.text += ev.delta.text;
+              if (Date.now() - lastFlush > 100) flush();
+            }
+            flush();
+            msg = await s.finalMessage();
+            break;
+          } catch (err) {
+            if (!isTransient(err) || attempt >= 3) throw err;
+            console.warn(`uplift ${name}: transient error on attempt ${attempt}, retrying`, err?.status, err?.message);
+            buf.thinking = buf.text = "";
+            send("reset", { attempt, message: "Claude is busy. Retrying this step…" });
+            await new Promise((r) => setTimeout(r, attempt * 3000));
+          }
         }
-        const msg = await s.finalMessage();
         if (msg.stop_reason === "refusal") throw new Error("The model declined this request.");
         const text = msg.content.filter((b) => b.type === "text").map((b) => b.text).join("").trim();
 
@@ -160,11 +194,11 @@ async function stage(store, body) {
         send("done", done);
       } catch (err) {
         // Let the PM retry the stage; the page offers replay if it keeps failing.
+        console.error(`uplift ${name}: stage failed after ${Date.now() - t0}ms`, err?.status, err?.message);
         run.next = name === "stories" && run.paths > 0 ? "done" : name === "stories" ? "gate" : name;
         await store.setJSON(key, run).catch(() => {});
-        const status = err?.status;
         send("error", {
-          message: status === 429 || status === 529 ? "Claude is busy right now." : err?.message?.slice(0, 200) || "Live run failed.",
+          message: isTransient(err) ? "Claude is busy right now. Wait a moment, then retry this step." : err?.message?.slice(0, 200) || "Live run failed.",
         });
       }
       ctrl.close();

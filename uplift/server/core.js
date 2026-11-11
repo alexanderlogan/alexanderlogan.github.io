@@ -18,9 +18,11 @@ export const OUTPUT_FILE = {
 export const MAX_PATHS = 3;
 export function canRun(run, stage) {
   if (stage === "stories") {
-    return run.next === "gate" || (run.next === "done" && run.paths < MAX_PATHS);
+    return run.next === "gate" || run.next === "busy:stories" || (run.next === "done" && run.paths < MAX_PATHS);
   }
-  return run.next === stage;
+  // "busy:<stage>" means a request claimed the stage. If the function was cut off before it could
+  // record success or failure, the claim is left behind; allow the same stage to run again.
+  return run.next === stage || run.next === "busy:" + stage;
 }
 export function nextAfter(stage) {
   return { research: "prd", prd: "critic", critic: "gate", stories: "backlog", backlog: "done" }[stage];

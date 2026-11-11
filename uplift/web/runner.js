@@ -87,7 +87,9 @@
     think.textContent = d.thinking || (d.status === "running" ? "Thinking…" : S.effort === "medium" ? "Fast mode: Claude skipped extended reasoning on this step. Tick \"Show reasoning\" for the next run." : "No reasoning recorded for this step.");
     if (atBottom) think.scrollTop = think.scrollHeight;
     const text = d.output || d.text;
-    $("lrOut").innerHTML = text ? md(visible(S.selected, text)) : `<p class="lr-empty">${d.status === "running" ? "Writing…" : "Output appears here."}</p>`;
+    // A failed step says why at the top of its own panel, where the person is looking.
+    const failNote = d.status === "failed" ? `<p class="lr-fail">This step failed: ${esc(d.error || "unknown error")} Use <b>Retry this step</b> above the stages.</p>` : "";
+    $("lrOut").innerHTML = failNote + (text ? md(visible(S.selected, text)) : `<p class="lr-empty">${d.status === "running" ? "Writing…" : "Output appears here."}</p>`);
     if (d.status === "running") $("lrOut").scrollTop = $("lrOut").scrollHeight;
   }
 
@@ -178,6 +180,11 @@
           const data = JSON.parse((chunk.match(/^data: (.+)$/m) || [])[1] || "{}");
           if (ev === "thinking" || ev === "text") stream(d, ev, data.t);
           else if (ev === "done") done = data;
+          else if (ev === "reset") {
+            // The server is retrying after Claude was busy; drop the partial stream.
+            d.thinking = ""; d.text = ""; d.events = []; d.t0 = Date.now();
+            setMsg(esc(data.message)); render();
+          }
           else if (ev === "error") throw new Error(data.message);
         }
       }
@@ -219,6 +226,7 @@
   }
   function failStage(id, d, message) {
     d.status = "failed";
+    d.error = message;
     S.busy = false;
     $("lrStart").disabled = false;
     $("lrStart").textContent = "Start over";
