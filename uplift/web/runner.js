@@ -97,6 +97,11 @@
     const p = curPath();
     const waiting = !!S.gateT0;
     $("lrTimer").textContent = waiting ? `your review time · ${dur(Date.now() - S.gateT0)}` : p ? `took ${dur(p.gateMs)}` : "";
+    // Build the fix list once per decision. The page re-renders every second to tick the
+    // review timer; rebuilding the list then would wipe the person's checkbox choices.
+    const key = waiting ? `wait:${S.gateT0}` : `done:${S.paths.length}`;
+    if ($("lrGate").dataset.key === key) return;
+    $("lrGate").dataset.key = key;
     const chosen = waiting ? (S.paths.length ? curPath().accepted : []) : p ? p.accepted : [];
     const replayNote = S.mode === "replay"
       ? `<p class="lr-note">Replay: stories come from the recorded path closest to your choices. In live mode Claude writes them for your exact choices.</p>` : "";
