@@ -30,6 +30,7 @@ const WEB_RUNNER = `## Web runner
 You are running one stage of this pipeline inside a web page, not in Claude Code. You have no file tools.
 - Where a skill says to read a file, the file's contents are given to you in the user message.
 - Where a skill says to write a file, reply with that file's full markdown contents only: no preamble before it and no remarks after it.
+- Before writing, think through the inputs against the skill's rules; visitors watch a summary of that reasoning.
 - The web page runs the next stage and the human approval gate itself. Ignore instructions to hand off to another skill or subagent, and do not ask questions or wait for approval.`;
 
 const file = (path, text) => `<file path="${path}">\n${text.trim()}\n</file>`;

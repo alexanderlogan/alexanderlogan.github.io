@@ -37,7 +37,7 @@ The page (`index.html`, `web/runner.js`) calls a Netlify Edge Function, `netlify
 
 To deploy your own copy:
 1. Deploy the repository to Netlify. `package.json` at the root brings in `@anthropic-ai/sdk` and `@netlify/blobs`.
-2. Set environment variables: `ANTHROPIC_API_KEY` (required for live mode), and optionally `UPLIFT_MODEL` (default `claude-sonnet-5-5`), `UPLIFT_EFFORT` (default `medium`), `UPLIFT_MONTHLY_CAP_USD` (default `20`), `UPLIFT_RUNS_PER_DAY` (default `3`).
+2. Set environment variables: `ANTHROPIC_API_KEY` (required for live mode), and optionally `UPLIFT_MODEL` (default `claude-sonnet-5-5`), `UPLIFT_EFFORT` (default `high`), `UPLIFT_MONTHLY_CAP_USD` (default `20`), `UPLIFT_RUNS_PER_DAY` (default `3`).
 3. After editing a skill, run `python build_site.py` so the page and the web runner use the new playbook.
 
 ### Recording replays

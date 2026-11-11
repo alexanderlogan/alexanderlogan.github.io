@@ -8,7 +8,7 @@
 // Settings (Netlify environment variables):
 //   ANTHROPIC_API_KEY         required for live mode; without it the page uses replay
 //   UPLIFT_MODEL              default claude-sonnet-5-5
-//   UPLIFT_EFFORT             default medium
+//   UPLIFT_EFFORT             default high
 //   UPLIFT_MONTHLY_CAP_USD    default 20
 //   UPLIFT_RUNS_PER_DAY       default 3 (per visitor)
 
@@ -109,7 +109,9 @@ async function stage(store, body) {
           model,
           max_tokens: MAX_TOKENS,
           thinking: { type: "adaptive", display: "summarized" },
-          output_config: { effort: env("UPLIFT_EFFORT", "medium") },
+          // At "medium", adaptive thinking often skips reasoning on these tasks, leaving the
+          // page's reasoning panel empty. "high" is Sonnet 5.5's default.
+          output_config: { effort: env("UPLIFT_EFFORT", "high") },
           // If a safety classifier declines, the API re-runs the request on a fallback model.
           betas: ["server-side-fallback-2026-07-01"],
           fallbacks: "default",
