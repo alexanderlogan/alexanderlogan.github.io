@@ -64,3 +64,5 @@
   .lr-main{padding:16px}
 }
 @media (max-width:420px){.lr-track{grid-template-columns:1fr}}
+.lr-opt{display:inline-flex;align-items:center;gap:7px;font-size:14px;color:var(--slate);cursor:pointer}
+.lr-opt input{width:16px;height:16px;accent-color:var(--teal)}

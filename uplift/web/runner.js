@@ -84,7 +84,7 @@
     $("lrTimer").textContent = d.status === "running" ? `running · ${dur(Date.now() - d.t0)}` : d.status === "done" ? `took ${dur(d.ms)}` : "";
     const think = $("lrThink");
     const atBottom = think.scrollHeight - think.scrollTop - think.clientHeight < 40;
-    think.textContent = d.thinking || (d.status === "running" ? "Thinking…" : "No reasoning recorded for this step.");
+    think.textContent = d.thinking || (d.status === "running" ? "Thinking…" : S.effort === "medium" ? "Fast mode: Claude skipped extended reasoning on this step. Tick \"Show reasoning\" for the next run." : "No reasoning recorded for this step.");
     if (atBottom) think.scrollTop = think.scrollHeight;
     const text = d.output || d.text;
     $("lrOut").innerHTML = text ? md(visible(S.selected, text)) : `<p class="lr-empty">${d.status === "running" ? "Writing…" : "Output appears here."}</p>`;
@@ -118,7 +118,7 @@
   function setMode() {
     $("lrMode").className = "lr-mode " + S.mode;
     $("lrMode").textContent = S.mode === "live"
-      ? `Live · ${S.model}`
+      ? `Live · ${S.model} · ${S.effort === "medium" ? "fast" : "high effort"}`
       : `Replay · recorded run${S.replay?.recordedAt ? " of " + S.replay.recordedAt.slice(0, 10) : ""} · ${S.speed}× speed`;
   }
   setInterval(() => { if (S && (S.busy || S.gateT0)) render(); }, 1000);
@@ -136,13 +136,13 @@
     setMsg("Starting…");
     let info;
     try {
-      const r = await post({ action: "start" });
+      const r = await post({ action: "start", effort: $("lrDeep").checked ? "high" : "medium" });
       info = await r.json();
     } catch {
       info = { mode: "replay", reason: "The live runner can't be reached." };
     }
     if (info.mode === "live") {
-      Object.assign(S, { mode: "live", runId: info.runId, model: info.model, maxPaths: info.maxPaths || 3 });
+      Object.assign(S, { mode: "live", runId: info.runId, model: info.model, effort: info.effort, maxPaths: info.maxPaths || 3 });
       setMode();
       setMsg(info.runsLeft >= 0 ? `${info.runsLeft} more live run${info.runsLeft === 1 ? "" : "s"} available to you today.` : "");
       runChain(["research", "prd", "critic"]);

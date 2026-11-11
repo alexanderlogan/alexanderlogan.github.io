@@ -126,7 +126,7 @@ footer a{color:#F4F7FA}
   <div class="eyebrow">Run it live</div>
   <h2>Watch the agents work, then make the call</h2>
   <p class="sub">Press run and Claude works through the same skills shown above, one stage at a time, with its reasoning streamed as it goes. When the critic finishes, the pipeline stops for you: accept or reject each of its fixes, and see how your choices shape the stories and the backlog.</p>
-  <div class="lr-controls"><button class="lr-btn primary" id="lrStart">Run the pipeline</button><span class="lr-mode" id="lrMode"></span><div id="lrMsg"></div></div>
+  <div class="lr-controls"><button class="lr-btn primary" id="lrStart">Run the pipeline</button><label class="lr-opt" title="High effort: Claude reasons before each step and you watch a summary of that reasoning. Slower. Untick for a faster run that often skips reasoning."><input type="checkbox" id="lrDeep" checked> Show reasoning (high effort, slower)</label><span class="lr-mode" id="lrMode"></span><div id="lrMsg"></div></div>
   <div class="lr-grid">
     <ol class="lr-track" id="lrTrack" aria-label="Pipeline stages"></ol>
     <div class="lr-main" aria-live="polite">

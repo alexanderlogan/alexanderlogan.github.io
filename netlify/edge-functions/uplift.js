@@ -23,6 +23,7 @@ const PRICE = { input: 2, output: 10, cacheRead: 0.1 };
 const RUN_RESERVE_USD = 1.5; // worst case for one run with a retried gate, kept free under the cap
 const RUN_TTL_MS = 2 * 60 * 60 * 1000;
 const MAX_TOKENS = 16000;
+const EFFORTS = ["medium", "high"]; // "high" thinks and streams reasoning; "medium" is faster and often skips it
 
 const json = (data, status = 200) =>
   new Response(JSON.stringify(data), {
@@ -48,14 +49,14 @@ export default async (req, context) => {
     return json({ error: "Bad request" }, 400);
   }
   const store = getStore({ name: "uplift", consistency: "strong" });
-  if (body.action === "start") return start(store, context);
+  if (body.action === "start") return start(store, context, body);
   if (body.action === "stage") return stage(store, body);
   return json({ error: "Unknown action" }, 400);
 };
 
 export const config = { path: "/api/uplift" };
 
-async function start(store, context) {
+async function start(store, context, body) {
   if (!Netlify.env.get("ANTHROPIC_API_KEY")) return json({ mode: "replay", reason: "Live mode is not configured on this site." });
   const day = new Date().toISOString().slice(0, 10);
   const month = day.slice(0, 7);
@@ -73,8 +74,10 @@ async function start(store, context) {
   await store.setJSON(vkey, { runs: used + 1 });
 
   const runId = crypto.randomUUID();
-  await store.setJSON(`runs/${runId}`, { created: Date.now(), next: "research", paths: 0, outputs: {}, issues: [] });
-  return json({ mode: "live", runId, model: env("UPLIFT_MODEL", "claude-sonnet-5-5"), runsLeft: perDay - used - 1, maxPaths: MAX_PATHS });
+  // The visitor picks reasoning depth; only these two values are accepted.
+  const effort = EFFORTS.includes(body.effort) ? body.effort : env("UPLIFT_EFFORT", "high");
+  await store.setJSON(`runs/${runId}`, { created: Date.now(), next: "research", paths: 0, outputs: {}, issues: [], effort });
+  return json({ mode: "live", runId, model: env("UPLIFT_MODEL", "claude-sonnet-5-5"), effort, runsLeft: perDay - used - 1, maxPaths: MAX_PATHS });
 }
 
 async function stage(store, body) {
@@ -111,7 +114,7 @@ async function stage(store, body) {
           thinking: { type: "adaptive", display: "summarized" },
           // At "medium", adaptive thinking often skips reasoning on these tasks, leaving the
           // page's reasoning panel empty. "high" is Sonnet 5.5's default.
-          output_config: { effort: env("UPLIFT_EFFORT", "high") },
+          output_config: { effort: run.effort || env("UPLIFT_EFFORT", "high") },
           // If a safety classifier declines, the API re-runs the request on a fallback model.
           betas: ["server-side-fallback-2026-07-01"],
           fallbacks: "default",
