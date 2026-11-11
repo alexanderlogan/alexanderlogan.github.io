@@ -10,7 +10,7 @@
 //   UPLIFT_MODEL              default claude-sonnet-5-5
 //   UPLIFT_EFFORT             default high
 //   UPLIFT_MONTHLY_CAP_USD    default 20
-//   UPLIFT_RUNS_PER_DAY       default 3 (per visitor)
+//   UPLIFT_RUNS_PER_DAY       default 10 (per visitor)
 
 import Anthropic from "@anthropic-ai/sdk";
 import { getStore } from "@netlify/blobs";
@@ -61,7 +61,7 @@ async function start(store, context, body) {
   const day = new Date().toISOString().slice(0, 10);
   const month = day.slice(0, 7);
   const cap = Number(env("UPLIFT_MONTHLY_CAP_USD", "20"));
-  const perDay = Number(env("UPLIFT_RUNS_PER_DAY", "3"));
+  const perDay = Number(env("UPLIFT_RUNS_PER_DAY", "10"));
 
   const spent = (await store.get(`spend/${month}`, { type: "json" }))?.usd ?? 0;
   if (spent + RUN_RESERVE_USD > cap) return json({ mode: "replay", reason: "This month's budget for live runs is used up." });
