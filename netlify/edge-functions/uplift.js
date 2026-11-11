@@ -125,7 +125,12 @@ async function stage(store, body) {
         if (msg.stop_reason === "refusal") throw new Error("The model declined this request.");
         const text = msg.content.filter((b) => b.type === "text").map((b) => b.text).join("").trim();
 
-        const done = { stage: name, ms: Date.now() - t0, model: msg.model, truncated: msg.stop_reason === "max_tokens" };
+        const done = {
+          stage: name, ms: Date.now() - t0, model: msg.model, truncated: msg.stop_reason === "max_tokens",
+          // Which blocks came back, so the page can tell "no reasoning" from "reasoning not shown".
+          blocks: msg.content.map((b) => b.type),
+          thinkingChars: msg.content.filter((b) => b.type === "thinking").reduce((a, b) => a + (b.thinking || "").length, 0),
+        };
         if (name === "critic") {
           const c = parseCritic(text);
           run.outputs.critic = c.markdown;

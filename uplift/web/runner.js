@@ -326,7 +326,12 @@
       case "critic": return `Verdict: ${S.verdict || "n/a"} · ${S.issues.length} fixes proposed`;
       case "gate": return path.rejected ? "Rejected the PRD; the run stopped"
         : `Accepted ${path.accepted.length} of ${S.issues.length} fixes${path.accepted.length ? " (" + path.accepted.map((x) => "#" + x).join(", ") + ")" : ""}`;
-      case "stories": { const n = count(/\bAs an? /g, t), f = count(/Source:\s*critic fix/gi, t); return `${n} stories${f ? `, ${f} traced to critic fixes` : ""}`; }
+      case "stories": {
+        // Every story carries a size estimate; fall back to "As a ..." lines.
+        const n = count(/Size:?[*_]*\s*(S|M|L)\b/g, t) || count(/\bAs an?\b/g, t);
+        const f = count(/Source:?[*_]*\s*critic fix/gi, t);
+        return `${n} stories${f ? `, ${f} traced to critic fixes` : ""}`;
+      }
       case "backlog": { const m = t.split("\n").find((l) => /Release 1/i.test(l)); return m ? m.replace(/^[\s>#|*-]+/, "").replace(/\*\*|__|\|/g, " ").replace(/\s+/g, " ").trim().slice(0, 160) : "RICE-ranked backlog"; }
     }
   }
