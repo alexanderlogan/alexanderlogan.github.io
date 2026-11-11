@@ -21,6 +21,8 @@ All data in /data is invented. Never present it as real customer data.
 - .claude/agents/         prd-critic (subagent)
 - .claude/commands/       /run-pipeline runs the whole flow with an approval gate
 - output/                 everything the pipeline produces (safe to delete and rerun)
+- scripts/runlog.py       records stage timings to output/run_log.jsonl
+- server/, web/, replay/  the live web version of this pipeline (see README.md)
 
 ## Working rules
 - Every insight in the synthesis must cite the interview file and speaker it came from. No uncited claims.

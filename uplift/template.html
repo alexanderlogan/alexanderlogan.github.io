@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="marked.min.js"></script>
+<link rel="stylesheet" href="web/runner.css">
 <style>
 :root{--exec:#071A2F;--gun:#0B2A45;--slate:#123A5A;--steel:#A9BBCB;--accent:#1F5F8B;--teal:#2E6F73;--fog:#E8F0F7;--paper:#F8FAFC;--line:#DCE5ED;--text:#0B1F33;--muted:#5F7F99;--warn:#9A5B13}
 *{box-sizing:border-box}
@@ -69,9 +70,17 @@ ol.steps{padding-left:20px}ol.steps li{margin:8px 0}
 code{font-family:'IBM Plex Mono',monospace;font-size:.92em;background:var(--fog);padding:1px 6px;border-radius:3px}
 footer{background:var(--exec);color:var(--steel);padding:36px 0;font-size:14px}
 footer a{color:#F4F7FA}
-@media (max-width:900px){.pipeline{grid-template-columns:repeat(2,1fr)}}
-@media (max-width:640px){.principles,.voices{grid-template-columns:1fr}.panel{padding:18px}section{padding:52px 0}.lede{font-size:17px}}
-</style>
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:28px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:6px;padding:18px}
+.stat .v{font-family:'Playfair Display',serif;font-size:32px;font-weight:700;color:var(--exec);line-height:1.1}
+.stat .k{font-size:13px;color:var(--muted);margin-top:6px}
+.stat.human{border-top:3px solid var(--teal)}
+.timeline{display:flex;height:44px;border-radius:6px;overflow:hidden;border:1px solid var(--line);background:#fff}
+.timeline .seg{background:var(--accent);border-right:2px solid #fff;min-width:6px}
+.timeline .seg:nth-child(even){background:var(--slate)}
+.timeline .seg.gate{background:var(--teal)}
+.method{font-size:13px;color:var(--muted);margin-top:18px}
+@media (max-width:900px){.pipeline{grid-template-columns:repeat(2,1fr)}.stats{grid-template-columns:repeat(2,1fr)}@media (max-width:640px){.principles,.voices{grid-template-columns:1fr}</style>
 </head>
 <body>
 <header class="hero">
@@ -80,7 +89,7 @@ footer a{color:#F4F7FA}
     <div class="eyebrow">Agentic product development &middot; Claude Code</div>
     <h1>From customer interviews to a reviewed backlog, with humans at the decision points.</h1>
     <p class="lede">A working pipeline that shows how a product team can encode its standards as reusable skills, have an independent agent challenge its own work, and move from raw research to prioritized stories in a single session.</p>
-    <div class="cta"><a class="btn primary" href="#run">See the example run</a><a class="btn ghost" href="#system">Inspect the skills</a></div>
+    <div class="cta"><a class="btn primary" href="#live">Run it live</a><a class="btn ghost" href="#system">Inspect the skills</a></div>
   </div>
 </header>
 
@@ -113,13 +122,36 @@ footer a{color:#F4F7FA}
   <div class="panel" id="sysPanel" role="tabpanel"></div>
 </div></section>
 
+<section id="live"><div class="wrap">
+  <div class="eyebrow">Run it live</div>
+  <h2>Watch the agents work, then make the call</h2>
+  <p class="sub">Press run and Claude works through the same skills shown above, one stage at a time, with its reasoning streamed as it goes. When the critic finishes, the pipeline stops for you: accept or reject each of its fixes, and see how your choices shape the stories and the backlog.</p>
+  <div class="lr-controls"><button class="lr-btn primary" id="lrStart">Run the pipeline</button><label class="lr-opt" title="High effort: Claude reasons before each step and you watch a summary of that reasoning. Slower. Untick for a faster run that often skips reasoning."><input type="checkbox" id="lrDeep" checked> Show reasoning (high effort, slower)</label><span class="lr-mode" id="lrMode"></span><div id="lrMsg"></div></div>
+  <div class="lr-grid">
+    <ol class="lr-track" id="lrTrack" aria-label="Pipeline stages"></ol>
+    <div class="lr-main" aria-live="polite">
+      <div class="lr-head"><h3 id="lrTitle"></h3><span id="lrTimer"></span></div>
+      <details class="lr-think" id="lrThinkWrap" open><summary>Reasoning (Claude's summarized thinking)</summary><pre id="lrThink"></pre></details>
+      <div class="md" id="lrOut"></div>
+      <div id="lrGate" hidden></div>
+    </div>
+  </div>
+  <div id="lrResult" hidden></div>
+</div></section>
+
 <section id="run"><div class="wrap">
-  <div class="eyebrow">Example run</div>
-  <h2>What comes out the other end</h2>
-  <p class="sub">One run of the pipeline on the four interviews. The human approved the PRD after accepting three of the critic's four fixes. Note how the critic's privacy finding becomes the top-ranked story.</p>
+  <div class="eyebrow">Reference run</div>
+  <h2>A complete run to read at your own pace</h2>
+  <p class="sub" id="refSub">A saved run of the pipeline on the four interviews, made with <code>/run-pipeline</code> in Claude Code.</p>
   <div class="note">Example output for illustration. All customers and data are fictional, and a fresh run will produce different wording.</div>
   <div class="tabs" role="tablist" id="outTabs"></div>
   <div class="panel md" id="outPanel" role="tabpanel"></div>
+  <div id="refCycle" hidden>
+    <h3 class="lr-h3">How long it took, measured</h3>
+    <div class="stats" id="refStats"></div>
+    <div class="timeline" id="refBar" role="img"></div>
+    <p class="method">Clock readings written by <code>scripts/runlog.py</code> to <code>output/run_log.jsonl</code> during the run, never typed by the agent. Gate time is the PM's review, from the critic's summary to the decision.</p>
+  </div>
 </div></section>
 
 <section id="principles"><div class="wrap">
@@ -134,13 +166,21 @@ footer a{color:#F4F7FA}
 </div></section>
 
 <section id="try"><div class="wrap">
-  <div class="eyebrow">Run it yourself</div>
-  <h2>Three steps</h2>
-  <ol class="steps">
-    <li>Copy the <a href="https://github.com/alexanderlogan/alexanderlogan.github.io/tree/main/uplift"><code>uplift</code> folder</a> to your machine.</li>
-    <li>Open it in Claude Code: run <code>claude</code> in a terminal, or use the Code tab in the Claude desktop app.</li>
-    <li>Clear the <code>output</code> folder and type <code>/run-pipeline</code>. Approve the PRD when asked.</li>
-  </ol>
+  <div class="eyebrow">Take it with you</div>
+  <h2>Open source, and yours to adapt</h2>
+  <p class="sub">The whole demo is MIT-licensed. The skills are plain markdown, so the most useful thing to change is the playbook itself: swap in your team's own research rules, PRD template and review lenses.</p>
+  <div class="principles">
+    <div class="card"><h3>In Claude Code</h3><ol class="steps">
+      <li>Copy the <a href="https://github.com/alexanderlogan/alexanderlogan.github.io/tree/main/uplift"><code>uplift</code> folder</a> to your machine.</li>
+      <li>Open it in Claude Code: run <code>claude</code> in a terminal, or use the Code tab in the Claude desktop app.</li>
+      <li>Type <code>/run-pipeline</code> and approve the PRD when asked. Stage timings land in <code>output/run_log.jsonl</code>.</li>
+    </ol></div>
+    <div class="card"><h3>As this web page</h3><ol class="steps">
+      <li>Deploy the repository to Netlify. The live runner is <code>netlify/edge-functions/uplift.js</code>.</li>
+      <li>Set <code>ANTHROPIC_API_KEY</code>, and optionally the spend caps, as Netlify environment variables.</li>
+      <li>After editing a skill, run <code>python build_site.py</code> so the page and the web runner use the new playbook.</li>
+    </ol></div>
+  </div>
 </div></section>
 
 <footer><div class="wrap">Built by <a href="/">Alexander Logan</a> &middot; Enterprise AI strategy and agentic ways of working &middot; <a href="https://lloydstrategy.com/">Lloyd Strategy</a></div></footer>
@@ -177,6 +217,26 @@ function tabs(tabEl, panelEl, items, render, sublabel){
 tabs(document.getElementById('sysTabs'), document.getElementById('sysPanel'), DATA.system,
   it => `<div class="mono" style="font-size:12px;color:var(--muted);margin-bottom:12px">${esc(it.path)}</div><pre class="src">${esc(it.text)}</pre>`, true);
 tabs(document.getElementById('outTabs'), document.getElementById('outPanel'), DATA.outputs, it => md(it.text), false);
+
+// Reference run timings, from output/run_log.jsonl. Hidden when the build found no complete run.
+const C = DATA.cycle;
+if (C) {
+  const dur = ms => { const s = Math.round(ms/1000); return s < 60 ? `${s}s` : s < 3600 ? `${Math.floor(s/60)}m ${String(s%60).padStart(2,'0')}s` : `${Math.floor(s/3600)}h ${Math.floor(s%3600/60)}m`; };
+  const NAMES = {research:'Synthesize research', prd:'Draft the PRD', critic:'Critic review', gate:'Human approval', stories:'Write stories', backlog:'Prioritize'};
+  const g = C.gate || {}, human = C.stages.filter(s => s.stage === 'gate').reduce((a,s) => a + s.ms, 0);
+  const agent = C.stages.filter(s => s.stage !== 'gate').reduce((a,s) => a + s.ms, 0);
+  document.getElementById('refStats').innerHTML = [
+    [dur(C.toPrd), 'Interviews to approved PRD', ''], [dur(C.toBacklog), 'Interviews to ranked backlog', ''],
+    [dur(agent), 'Agent time', ''], [dur(human), 'Human time at the gate', 'human'],
+  ].map(([v,k,c]) => `<div class="stat ${c}"><div class="v">${v}</div><div class="k">${k}</div></div>`).join('');
+  const bar = document.getElementById('refBar');
+  bar.innerHTML = C.stages.map(s => `<div class="seg ${s.stage==='gate'?'gate':''}" style="flex:${s.ms||1}" title="${NAMES[s.stage]}: ${dur(s.ms)}"></div>`).join('');
+  bar.setAttribute('aria-label', C.stages.map(s => `${NAMES[s.stage]} ${dur(s.ms)}`).join(', '));
+  if (g.raised != null) document.getElementById('refSub').insertAdjacentText('beforeend',
+    ` The PM ${g.decision === 'edit' ? 'edited and approved' : 'approved'} the PRD after accepting ${g.accepted} of the critic's ${g.raised} fixes.`);
+  document.getElementById('refCycle').hidden = false;
+}
 </script>
+<script src="web/runner.js"></script>
 </body>
 </html>
