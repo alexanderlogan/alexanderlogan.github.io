@@ -3,7 +3,7 @@
   "private": true,
   "description": "Personal site and the Uplift agentic PDLC demo. Netlify installs these for the edge and serverless functions.",
   "dependencies": {
-    "@anthropic-ai/sdk": "1.8.0",
-    "@netlify/blobs": "11.1.9"
+    "@anthropic-ai/sdk": "1.3.0",
+    "@netlify/blobs": "11.1.6"
   }
 }
