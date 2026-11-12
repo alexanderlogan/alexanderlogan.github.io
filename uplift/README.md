@@ -8,6 +8,18 @@ The product is fictional: **Uplift**, AI adoption analytics for knowledge-worker
 
 Live page: [alexander-logan.netlify.app/uplift](https://alexander-logan.netlify.app/uplift/)
 
+## The business problem
+
+Most enterprises have now procured AI licenses at scale (Claude, Copilot, Gemini), and most are approaching the first renewal cycle without a credible answer to the question the CFO will ask: what are we getting for it? Leaders can report how many people logged in. What they have no way to see is which workflows people actually use AI for, where adoption stalls, how much time it saves, and who the internal champions are whose methods everyone else should be learning from. Self-reported time savings do not survive a finance review, so the renewal decision ends up resting on anecdote. In the interviews behind this demo, an L&D leader at an insurance carrier admits she can tell her executives how many people logged in and nothing more, and a CIO at a German manufacturer describes a board that wants one number he has no way to produce.
+
+The obvious remedy, measuring individuals, deepens the problem it is meant to solve. Employees read individual measurement as surveillance and, more pointedly, as a mechanism for converting their productivity gains into more work rather than recognition. A senior analyst in the research says as much, observing that if her manager sees she finishes in two hours what used to take eight, she gets six more hours of work, not credit. In Europe the constraint becomes formal, because a works council must approve any system capable of evaluating employee performance, and the data must remain in the EU. A tool that reads as monitoring suppresses the adoption it was procured to measure, and in some markets it never clears procurement at all.
+
+Uplift's mandate is therefore narrower and harder than adoption analytics in the usual sense: prove the value of AI by workflow without measuring individuals. In practice that means team-level views with minimum group sizes so that no one can be singled out, a way to package and spread what the few power users have already worked out (one VP of Product estimates that fifteen of his 120 product managers have built real workflows while the rest mostly use it to rewrite emails), recognition that employees control and choose to share, and privacy designed in from the start so that works councils and regulators can approve it quickly rather than eventually.
+
+### Why this product, for this demo
+
+The demo itself addresses a related but distinct problem. Product teams adopting AI tools tend to get faster at producing documents without getting better at the decisions those documents exist to support. Uplift was chosen as the subject because it is the problem most organizations rolling out AI are living through right now, and because the tension between what leaders want to measure and what employees will accept gives the critic and the human approval gate real decisions to make rather than approvals to wave through. The product is fictional and every interview is invented. The tension is not.
+
 ## How it works
 | Stage | Component | Output |
 |-------|-----------|--------|
